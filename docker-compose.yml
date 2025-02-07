@@ -1,0 +1,30 @@
+services:
+  ddns-updater:
+    build: 
+      context: ./ddns-updater
+      dockerfile: ../dockerfiles/ddns-updater.dockerfile
+    environment:
+      - PING_INTERVAL=60
+      - PING_URL=https://api.ipify.org?format=text
+    env_file:
+      - env/aws.env
+      - env/ddns-updater.env
+    tty: true
+    stdin_open: true
+  web-interface-dev:
+    build:
+      context: ./web-interface
+      dockerfile: ../dockerfiles/web-interface-dev.dockerfile
+    ports:
+      - "3001:3001"
+    tty: true
+    stdin_open: true
+  web-interface:
+    build:
+      context: ./web-interface
+      dockerfile: ../dockerfiles/web-interface.dockerfile
+    ports:
+      - "8080:80"
+# volumes:  
+    #   - /app/node_modules
+    #   - /web-interface:/app
