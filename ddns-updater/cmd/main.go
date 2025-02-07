@@ -21,27 +21,27 @@ func main() {
 
 	dnsIp, err := aws.GetARecord(hostedZoneID, recordName)
 	if err != nil {
-		fmt.Print(err)
-		fmt.Print("error while receiving")
+		log.Fatalf("[DDNS-UPDATER] Error while querying public IP %s", err)
 	} else {
-		log.Printf("Starting ip found : %s\n", dnsIp)
+		log.Printf("[DDNS-UPDATER] DNS provider A record found : %s\n", dnsIp)
 	}
 
 	for {
 		publicIp, err := network.GetPublicIp()
 		if err != nil {
-			log.Printf("Error retrieving IP: %v", err)
+			log.Printf("[DDNS-UPDATER] Error retrieving public IP: %v", err)
 		} else {
+			log.Printf("[DDNS-UPDATER] Received public IP %s\n", publicIp)
 			if dnsIp != publicIp {
+				log.Print("[DDNS-UPDATER] A records and public IP don't match, updating...")
 				err = aws.UpdateARecord(hostedZoneID, recordName, publicIp)
 				if err != nil {
 					fmt.Print(err)
 				} else {
-					log.Printf("Updated A records in Route 53 to %s\n", dnsIp)
+					log.Printf("[DDNS-UPDATER] Successfully updated A records in Route 53 to %s\n", dnsIp)
 				}
 				dnsIp = publicIp
 			}
-			log.Printf("Received IP %s\n", publicIp)
 		}
 
 		time.Sleep(time.Duration(pingInterval) * time.Second)

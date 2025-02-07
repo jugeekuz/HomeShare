@@ -67,11 +67,10 @@ func UpdateARecord(hostedZoneId string, recordName string, newIp string) error {
         ChangeBatch:  changeBatch,
     }
 
-	result, err := client.ChangeResourceRecordSets(context.TODO(), input)
+	_, err = client.ChangeResourceRecordSets(context.TODO(), input)
 	if err != nil {
 		return fmt.Errorf("failed to update A record: %v", err)
 	}
 
-	fmt.Printf("A record updated successfully. Change ID: %s\n", *result.ChangeInfo.Id)
     return nil
 }
