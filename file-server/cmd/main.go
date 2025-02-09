@@ -15,6 +15,15 @@ import (
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	const MAX_MBYTES = 1
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+    if r.Method == http.MethodOptions {
+        w.WriteHeader(http.StatusOK)
+        return
+    }
+
 	r.Body = http.MaxBytesReader(w, r.Body, MAX_MBYTES<<20+1024)
 	err := r.ParseMultipartForm(MAX_MBYTES << 20)
 	if err != nil {
