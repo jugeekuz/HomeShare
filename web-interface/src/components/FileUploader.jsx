@@ -1,65 +1,31 @@
-// FileUploader.js
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import config from '../configs/config';
+import { Button } from '@heroui/button';
+import { Progress } from '@heroui/progress';
+import { uploadChunk, createChunk, chunkAndUpload } from '../services/chunkFile';
 
-const CHUNK_SIZE = 1024 * 1024; // 1 MB
+import { FileContext } from '../contexts/FileContext';
 
-function FileUploader() {
-  const [file, setFile] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
+const FileUploader = () => {
+  const { file, setFile, progress, setProgress } = useContext(FileContext);
   const uploadFile = async () => {
     if (!file) return;
-
-    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    // Create a simple unique ID using the file name and current time.
-    const fileID = `${file.name}-${Date.now()}`;
-    let uploadedChunks = 0;
-
-    // Loop through the file and send each chunk
-    for (let chunkNumber = 1; chunkNumber <= totalChunks; chunkNumber++) {
-      const start = (chunkNumber - 1) * CHUNK_SIZE;
-      const end = Math.min(start + CHUNK_SIZE, file.size);
-      const chunk = file.slice(start, end);
-
-      const formData = new FormData();
-      formData.append('fileID', fileID);
-      formData.append('chunkNumber', chunkNumber);
-      formData.append('totalChunks', totalChunks);
-      formData.append('chunk', chunk);
-
-      try {
-        const response = await fetch('http://localhost:8080/upload', {
-          method: 'POST',
-          body: formData,
-        });
-        if (response.ok) {
-          uploadedChunks++;
-          setUploadProgress(Math.round((uploadedChunks / totalChunks) * 100));
-        } else {
-          console.error('Chunk upload failed');
-          break;
-        }
-      } catch (error) {
-        console.error('Error uploading chunk', error);
-        break;
-      }
-    }
-  };
-
+    chunkAndUpload(setProgress, file);
+}
   return (
-    <div>
-      <h1>Chunked File Upload</h1>
-      <input type="file" onChange={handleFileChange} />
-      <button onClick={uploadFile} disabled={!file}>
-        Upload
-      </button>
-      <div>Progress: {uploadProgress}%</div>
-    </div>
-  );
+    <>
+    <Progress isStriped aria-label="Loading..." className="w-[70%]" color="secondary" value={progress}/>
+    <Button
+      color="primary"
+      isDisabled={!file}
+      className="text-md w-[80%]"
+      size="lg"
+      onPress={uploadFile}
+    >
+      Send Files
+    </Button>
+    </>
+  )
 }
 
 export default FileUploader;

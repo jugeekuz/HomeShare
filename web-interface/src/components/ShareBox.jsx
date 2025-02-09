@@ -1,25 +1,29 @@
-import React from 'react'
+import React, {useRef , useState} from 'react'
 
-import { Button } from '@heroui/button'
+import { FileProvider } from '../contexts/FileContext'
 
+import FileLoader from './FileLoader'
 import FileUploader from './FileUploader'
-
 const ShareBox = () => {
+    const fileInputRef = useRef(null);
+
     return (
         <div className="flex h-full w-full justify-center items-center ">
-            <div className="flex flex-col justify-end items-center h-[40rem] w-[32rem] max-w-[85%] max-h-[60%] bg-white rounded-xl shadow-lg -mt-20">
-                {/* <div className="flex w-full justify-center items-center h-16">
-                    <span className=" text-xl">
-                      
-                    </span>
-                </div> */}
-
-                <FileUploader/>
-                <div className="flex justify-center items-center w-[80%] mb-8">
-                    <Button color='primary' className='text-md w-[80%]' size='lg'>
-                        Transfer Files
-                    </Button>
-                </div>
+            <div className="flex flex-col justify-center items-center h-[40rem] w-[25rem] max-w-[85%] max-h-[60%] bg-white rounded-xl shadow-lg -mt-20">
+                
+                <FileProvider>
+                    <div className="flex flex-col items-center justify-center w-full h-3/5">
+                        <div className="flex flex-col justify-center items-center text-center mt-10">
+                            <FileLoader/>
+                            <span className="">
+                                Upload Files
+                            </span>
+                        </div>
+                    </div>
+                    <div className="flex flex-col justify-center gap-3 items-center w-full h-2/5 py-5">
+                        <FileUploader/>
+                    </div>
+                </FileProvider>
             </div>
         </div>
     )
