@@ -3,7 +3,9 @@ import react from '@vitejs/plugin-react-swc'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+  ],
   server: {
     port: 3001,
     allowedHosts: ['kuza.gr', 'localhost'],

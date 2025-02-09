@@ -1,35 +1,31 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import ShareBox from "./components/ShareBox"
+import Share from "./components/ShareBox"
+import NavBar from "./components/NavBar"
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+	return (
+		<div
+			className="relative items-center w-[100dvw] h-[100dvh] "
+			style={{
+					backgroundImage: "url('src/assets/img/files-abstract.jpg')", // Adjust the path to your image
+					backgroundSize: "cover",
+					backgroundPosition: "center",
+					backgroundRepeat: "no-repeat"
+			}}
+		>
+			{/* Gradient Overlay */}
+			<div
+				className="z-[1] absolute top-0 left-0 right-0 bottom-0"
+					style={{
+							background: "linear-gradient(to bottom, rgba(0, 0, 0, 0.6), rgba(255, 255, 255, 0))", 
+					}}
+			/>
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+			<div className="relative z-[2] h-full w-full flex flex-col items-center justify-center">
+					<NavBar />
+					<ShareBox />
+			</div>
+		</div>
+	)
 }
-
 export default App
