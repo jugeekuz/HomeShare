@@ -11,20 +11,36 @@ services:
       - env/ddns-updater.env
     tty: true
     stdin_open: true
+    # volumes:
+    #   - logs:/logs
+  file-server:
+    build: 
+      context: ./file-server
+      dockerfile: ../dockerfiles/file-server.dockerfile
+    tty: true
+    stdin_open: true
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./files:/app/uploads
   web-interface-dev:
     build:
       context: ./web-interface
       dockerfile: ../dockerfiles/web-interface-dev.dockerfile
     ports:
       - "3001:3001"
+    volumes:
+      - /app/node_modules
+      - ./web-interface:/app
     tty: true
     stdin_open: true
-  web-interface:
-    build:
-      context: ./web-interface
-      dockerfile: ../dockerfiles/web-interface.dockerfile
-    ports:
-      - "8080:80"
-# volumes:  
-    #   - /app/node_modules
-    #   - /web-interface:/app
+  # web-interface:
+  #   build:
+  #     context: ./web-interface
+  #     dockerfile: ../dockerfiles/web-interface.dockerfile
+  #   ports:
+  #     - "8080:80"
+
+
+# volumes:
+#   - logs

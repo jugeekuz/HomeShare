@@ -31,7 +31,7 @@ func main() {
 		if err != nil {
 			log.Printf("[DDNS-UPDATER] Error retrieving public IP: %v", err)
 		} else {
-			log.Printf("[DDNS-UPDATER] Received public IP %s\n", publicIp)
+			log.Printf("[DDNS-UPDATER] Public IP is: %s\n", publicIp)
 			if dnsIp != publicIp {
 				log.Print("[DDNS-UPDATER] A records and public IP don't match, updating...")
 				err = aws.UpdateARecord(hostedZoneID, recordName, publicIp)
