@@ -1,31 +1,24 @@
 import config from "../configs/config";
 
-export const uploadChunk = async (chunk, callback, retry=0) => {
+export const uploadChunk = async (chunkFormData, callback, retry = 0) => {
     const MAX_RETRIES = config.MAX_CHUNK_RETRIES;
-    const uploadUrl = config.UPLOAD_URL
-
+    
     try {
-        const response = await fetch(uploadUrl, {
-            method: 'POST',
-            body: chunk,
+        const response = await fetch(config.UPLOAD_URL, {
+            method: "POST",
+            body: chunkFormData,
         });
-        if (response.ok) {
-            callback();
-            return { success: true };
-        } 
+    
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        callback();
+        return { success: true };
+    } catch (error) {
         if (retry >= MAX_RETRIES) {
-            return { success: false, error: 'Max retries exceeded' };
+            return { success: false, error: `Max retries exceeded: ${error.message}` };
         }
-        return await uploadChunk(chunk, callback, retry + 1);
-
-    } catch(error) {
-        if (retry >= MAX_RETRIES) {
-            return { success: false, error: 'Network error: Max retries exceeded' };
-        }
-        return await uploadChunk(chunk, callback, retry + 1);
+        return uploadChunk(chunkFormData, callback, retry + 1);
     }
-
-}
+  };
 
 
 export const createChunk = (file, fileId, chunkNumber) => {
@@ -49,46 +42,44 @@ export const createChunk = (file, fileId, chunkNumber) => {
     return formData;
 }
 
-export const chunkAndUpload = async (setProgress, file) => {
+export const chunkAndUpload = async (onProgress, file) => {
     if (!file || !(file instanceof File)) return;
-
+  
     const CHUNK_SIZE = config.MAX_CHUNK_SIZE_MB * 1024 * 1024;
     const CONCURRENT_REQUESTS = config.MAX_CONCURRENT_REQUESTS;
-
+    const fileId = file.name;
+  
     try {
-        if (!file) return;
-
-        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-
-        const callback = (chunkIndex) => {
-            const percentage = ((chunkIndex+1)/totalChunks)*100
-            if (percentage === 100) setTimeout(() => setProgress(0), 800);
-            setProgress(percentage);
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      let uploadedChunks = 0;
+  
+      const updateProgress = () => {
+        uploadedChunks++;
+        const percentage = (uploadedChunks / totalChunks) * 100;
+        onProgress(percentage);
+      };
+  
+      const uploadPromises = [];
+      for (let chunkNumber = 1; chunkNumber <= totalChunks; chunkNumber++) {
+        const chunkFormData = createChunk(file, fileId, chunkNumber);
+        uploadPromises.push(
+          uploadChunk(chunkFormData, updateProgress)
+        );
+  
+        if (uploadPromises.length >= CONCURRENT_REQUESTS || chunkNumber === totalChunks) {
+          const results = await Promise.all(uploadPromises);
+          if (results.some(res => !res.success)) throw new Error("Chunk upload failed");
+          uploadPromises.length = 0;
         }
-
-        const fileId = `${file.name}`;
-
-        const totalPromises = Math.ceil(totalChunks/CONCURRENT_REQUESTS);
-
-        for (let i = 0; i < totalPromises; i++) {
-            const promiseStart = i*CONCURRENT_REQUESTS;
-            const promiseEnd = Math.min(totalChunks, (i+1)*CONCURRENT_REQUESTS);
-            
-            const promises = Array.from({length: (promiseEnd-promiseStart)}, (_,i) => {
-                const chunkIndex = promiseStart + i + 1
-                const chunk = createChunk(file, fileId, chunkIndex)
-                return uploadChunk(chunk, () => callback(chunkIndex))
-            })
-            
-            const results = await Promise.all(promises)
-            if (results.some((result) => result.success === false)) {
-                throw new Error('Some chunks failed to upload');
-            }
-        }
-        return {success: true}
-
+      }
+  
+      return { success: true };
     } catch (error) {
-        return { success: false, error: 'Max retries exceeded' };
+      return { success: false, error: error.message };
     }
-}
+  };
+  
+  const generateUniqueFileId = (file) => {
+    return `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  };
 
