@@ -4,18 +4,19 @@ import { FileContext } from '../contexts/FileContext';
 
 const ArrowIcon = () => (
     <svg width="45px" height="45px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 8L12 4M12 4L16 8M12 4V16M4 20H20" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 8L12 4M12 4L16 8M12 4V16M4 20H20" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
 )
 
 const FileLoader = () => {
 
-    const { file, setFile, progress, setProgress } = useContext(FileContext)
+    const { files, setFiles, progress, setProgress } = useContext(FileContext);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef(null);
 
     const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
+        const selectedFiles = Array.from(e.target.files);
+        setFiles(selectedFiles);
     };
 
     return (
@@ -33,6 +34,7 @@ const FileLoader = () => {
             className="sr-only"
             onChange={handleFileChange}
             accept="*"
+            multiple
             aria-label="Select files to upload"
         />
     </div>
