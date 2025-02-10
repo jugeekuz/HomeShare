@@ -1,7 +1,6 @@
-// main.go
-package main
-
+package uploader
 import (
+	// "bufio"
 	"fmt"
 	"io"
 	"log"
@@ -9,17 +8,30 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
+)
+var (
+	UploadDir = "uploads"
 )
 
-func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse a multipart form (adjust maxMemory as needed)
-	err := r.ParseMultipartForm(10 << 20) // 10 MB
+func UploadHandler(w http.ResponseWriter, r *http.Request) {
+	const MAX_MBYTES = 1
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+    if r.Method == http.MethodOptions {
+        w.WriteHeader(http.StatusOK)
+        return
+    }
+
+	r.Body = http.MaxBytesReader(w, r.Body, MAX_MBYTES<<20+1024)
+	err := r.ParseMultipartForm(MAX_MBYTES << 20)
 	if err != nil {
 		http.Error(w, "Unable to parse form", http.StatusBadRequest)
 		return
 	}
-
-	// Retrieve form values
+	
 	fileID := r.FormValue("fileID")
 	chunkNumberStr := r.FormValue("chunkNumber")
 	totalChunksStr := r.FormValue("totalChunks")
@@ -27,6 +39,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing parameters", http.StatusBadRequest)
 		return
 	}
+	if !strings.Contains(fileID, ".") {
+		http.Error(w, "FileID doesn't contain an extension", http.StatusBadRequest)
+		return
+	}
+	parts := strings.Split(fileID, ".")
+	fileName := parts[0]
+	// fileExtension := parts[1]
 
 	chunkNumber, err := strconv.Atoi(chunkNumberStr)
 	if err != nil {
@@ -38,8 +57,8 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid total chunks", http.StatusBadRequest)
 		return
 	}
+	log.Print(totalChunks)
 
-	// Retrieve the file chunk from the form
 	file, _, err := r.FormFile("chunk")
 	if err != nil {
 		http.Error(w, "Error retrieving chunk", http.StatusBadRequest)
@@ -47,14 +66,12 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// Create a temporary directory for the file's chunks (if it doesn't exist)
-	uploadDir := filepath.Join("uploads", fileID)
+	uploadDir := filepath.Join(UploadDir, fileName)
 	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
 		http.Error(w, "Error creating directory", http.StatusInternalServerError)
 		return
 	}
 
-	// Save the chunk to disk
 	chunkFilePath := filepath.Join(uploadDir, fmt.Sprintf("chunk_%d", chunkNumber))
 	out, err := os.Create(chunkFilePath)
 	if err != nil {
@@ -69,10 +86,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Optionally, check if all chunks have been uploaded
 	files, err := os.ReadDir(uploadDir)
 	if err == nil && len(files) == totalChunks {
-		finalFilePath := filepath.Join("uploads", fmt.Sprintf("%s_final", fileID))
+		finalFilePath := filepath.Join("uploads", fileID)
 		finalFile, err := os.Create(finalFilePath)
 		if err != nil {
 			http.Error(w, "Error creating final file", http.StatusInternalServerError)
@@ -80,7 +96,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		defer finalFile.Close()
 
-		// Reassemble chunks in order
 		for i := 1; i <= totalChunks; i++ {
 			chunkPath := filepath.Join(uploadDir, fmt.Sprintf("chunk_%d", i))
 			chunkFile, err := os.Open(chunkPath)
@@ -95,15 +110,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		// Optionally: Remove chunk files after assembly.
-	}
 
+		err = os.RemoveAll(uploadDir)
+		if err != nil {
+			log.Fatalf("Error deleting directory: %v", err)
+		}
+
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Chunk uploaded successfully"))
-}
-
-func main() {
-	http.HandleFunc("/upload", uploadHandler)
-	fmt.Println("Server started on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }
