@@ -23,6 +23,7 @@ services:
       - "8080:8080"
     volumes:
       - ./files:/app/uploads
+      - /app/chunks
   web-interface-dev:
     build:
       context: ./web-interface
@@ -43,4 +44,4 @@ services:
 
 
 # volumes:
-#   - logs
+#   - app_chunks:
