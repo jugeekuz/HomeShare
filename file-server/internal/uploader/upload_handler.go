@@ -65,7 +65,7 @@ func parseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error)
 	}
 
 	if r.FormValue("totalChunks") == "" {
-		return ChunkMeta{}, Chunk{}, fmt.Errorf("md5Hash is required")
+		return ChunkMeta{}, Chunk{}, fmt.Errorf("totalChunks is required")
 	}
 
 	files, ok := r.MultipartForm.File["chunk"]
