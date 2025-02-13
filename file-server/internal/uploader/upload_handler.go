@@ -47,7 +47,35 @@ func parseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error)
 		return ChunkMeta{}, Chunk{}, fmt.Errorf("unable to parse form: %w", err)
 	}
 
-	// Check if they are empty
+	if r.FormValue("fileId") == "" {
+		return ChunkMeta{}, Chunk{}, fmt.Errorf("fileId is required")
+	}
+	if r.FormValue("fileName") == "" {
+		return ChunkMeta{}, Chunk{}, fmt.Errorf("fileName is required")
+	}
+	if r.FormValue("fileExtension") == "" {
+		return ChunkMeta{}, Chunk{}, fmt.Errorf("fileExtension is required")
+	}
+	if r.FormValue("md5Hash") == "" {
+		return ChunkMeta{}, Chunk{}, fmt.Errorf("md5Hash is required")
+	}
+
+	if r.FormValue("chunkIndex") == "" {
+		return ChunkMeta{}, Chunk{}, fmt.Errorf("chunkIndex is required")
+	}
+
+	if r.FormValue("totalChunks") == "" {
+		return ChunkMeta{}, Chunk{}, fmt.Errorf("md5Hash is required")
+	}
+
+	files, ok := r.MultipartForm.File["chunk"]
+	if !ok || len(files) == 0 {
+		return ChunkMeta{}, Chunk{}, fmt.Errorf("chunk file is required")
+	}
+	if files[0].Size == 0 {
+		return ChunkMeta{}, Chunk{}, fmt.Errorf("chunk file is empty")
+	}
+
 
 	chunkIndex, err := strconv.Atoi(r.FormValue("chunkIndex"))
 	if err != nil {
@@ -59,7 +87,7 @@ func parseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error)
 		return ChunkMeta{}, Chunk{}, fmt.Errorf("invalid number of chunks: %w", err)
 	}
 
-	if chunkIndex > totalChunks - 1 || chunkIndex < 0 {
+	if chunkIndex > totalChunks-1 || chunkIndex < 0 {
 		return ChunkMeta{}, Chunk{}, fmt.Errorf("invalid chunk index: %d", chunkIndex)
 	}
 
