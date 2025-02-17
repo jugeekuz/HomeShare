@@ -187,3 +187,77 @@ func TestChunkAssemble_MD5Mismatch(t *testing.T) {
 		t.Errorf("final file should not exist due to MD5 mismatch")
 	}
 }
+
+func TestChunkAssemble_FileAlreadyExists(t *testing.T) {
+    // Create temporary directories for the upload and chunk storage.
+    uploadDir := t.TempDir()
+    chunkDir := t.TempDir()
+
+    // Ensure the uploader uses our temporary directories.
+    uploader.UploadDir = uploadDir
+    uploader.ChunkDir = chunkDir
+
+    // Setup an existing file in the upload directory.
+    originalPath := filepath.Join(uploadDir, "duplicate.txt")
+    if err := os.WriteFile(originalPath, []byte("existing content"), 0644); err != nil {
+        t.Fatal(err)
+    }
+
+    // Setup test chunk in a new chunks directory.
+    fileID := uuid.New().String()
+    chunksDir := filepath.Join(chunkDir, fileID)
+    if err := os.MkdirAll(chunksDir, 0755); err != nil {
+        t.Fatal(err)
+    }
+
+    chunkContent := []byte("test data")
+    chunkFilePath := filepath.Join(chunksDir, "chunk_0")
+    if err := os.WriteFile(chunkFilePath, chunkContent, 0644); err != nil {
+        t.Fatal(err)
+    }
+
+    // Create metadata with the MD5 hash of the chunk content.
+    hasher := md5.New()
+    hasher.Write(chunkContent)
+    expectedHash := hex.EncodeToString(hasher.Sum(nil))
+
+    meta := uploader.ChunkMeta{
+        FileId:        fileID,
+        FileName:      "duplicate",
+        FileExtension: ".txt",
+        TotalChunks:   1,
+        MD5Hash:       expectedHash,
+    }
+
+    // Call the function under test.
+    uploader.ChunkAssemble(meta)
+
+    // Verify that the new file was created with a "(1)" suffix.
+    expectedPath := filepath.Join(uploadDir, "duplicate (1).txt")
+    if _, err := os.Stat(expectedPath); os.IsNotExist(err) {
+        t.Fatalf("Renamed file was not created at expected path: %s", expectedPath)
+    }
+
+    // Verify that the original file remains unchanged.
+    originalContent, err := os.ReadFile(originalPath)
+    if err != nil {
+        t.Fatal(err)
+    }
+    if string(originalContent) != "existing content" {
+        t.Error("Original file was modified")
+    }
+
+    // Verify that the new file has the correct content.
+    newContent, err := os.ReadFile(expectedPath)
+    if err != nil {
+        t.Fatal(err)
+    }
+    if string(newContent) != "test data" {
+        t.Error("New file content mismatch")
+    }
+
+    // Verify that the chunks directory has been deleted.
+    if _, err := os.Stat(chunksDir); !os.IsNotExist(err) {
+        t.Error("Chunks directory was not deleted")
+    }
+}

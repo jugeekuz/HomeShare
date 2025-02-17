@@ -38,6 +38,23 @@ var (
 	ChunkDir = "chunks"
 )
 
+func getUniqueFileName(path string) string {
+	counter := 1
+	dir := filepath.Dir(path)
+	ext := filepath.Ext(path)
+	baseName := strings.TrimSuffix(filepath.Base(path), ext)
+
+	for {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			return path
+		}
+
+		newName := fmt.Sprintf("%s (%d)%s", baseName, counter, ext)
+		path = filepath.Join(dir, newName)
+		counter++
+	}
+}
+
 func ParseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error) {
 	const MAX_MBYTES = 1
 
@@ -75,7 +92,6 @@ func ParseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error)
 	if files[0].Size == 0 {
 		return ChunkMeta{}, Chunk{}, fmt.Errorf("chunk file is empty")
 	}
-
 
 	chunkIndex, err := strconv.Atoi(r.FormValue("chunkIndex"))
 	if err != nil {
@@ -143,13 +159,16 @@ func ChunkAssemble(meta ChunkMeta) {
 		return
 	}
 
-	defer func () {
+	defer func() {
 		if err := os.RemoveAll(chunksDir); err != nil {
 			log.Printf("Error deleting chunk directory %s: %v", chunksDir, err)
 		}
 	}()
 
 	finalFilePath := filepath.Join(UploadDir, meta.FileName+meta.FileExtension)
+
+	finalFilePath = getUniqueFileName(finalFilePath) // If file exists then save as `file (1)`
+
 	finalFile, err := os.Create(finalFilePath)
 	if err != nil {
 		log.Printf("Error creating final file %s: %v", finalFilePath, err)
@@ -186,10 +205,10 @@ func ChunkAssemble(meta ChunkMeta) {
 		if err := os.Remove(finalFilePath); err != nil {
 			log.Printf("Error while deleting final file path %s: %q", finalFilePath, err)
 		}
-		
+
 		return
 	}
-	
+
 	log.Printf("Successfully assembled file %s", finalFilePath)
 }
 
