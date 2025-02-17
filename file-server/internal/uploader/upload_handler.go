@@ -38,7 +38,7 @@ var (
 	ChunkDir = "chunks"
 )
 
-func parseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error) {
+func ParseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error) {
 	const MAX_MBYTES = 1
 
 	r.Body = http.MaxBytesReader(w, r.Body, (MAX_MBYTES<<20)+1024)
@@ -126,7 +126,7 @@ func parseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error)
 	return meta, chunk, nil
 }
 
-func chunkAssemble(meta ChunkMeta) {
+func ChunkAssemble(meta ChunkMeta) {
 	chunksDir := filepath.Join(ChunkDir, meta.FileId)
 	if _, err := os.Stat(chunksDir); os.IsNotExist(err) {
 		log.Printf("Chunk directory %s does not exist for file ID: %s", chunksDir, meta.FileId)
@@ -180,8 +180,13 @@ func chunkAssemble(meta ChunkMeta) {
 	expectedHash := strings.ToLower(strings.TrimSpace(meta.MD5Hash))
 
 	if strings.ToLower(computedHash) != expectedHash {
+		finalFile.Close() // File has to be closed in order to be removed
+
 		log.Printf("MD5 mismatch for %s. Computed: %s, Expected: %s", meta.FileId, computedHash, expectedHash)
-		os.Remove(finalFilePath)
+		if err := os.Remove(finalFilePath); err != nil {
+			log.Printf("Error while deleting final file path %s: %q", finalFilePath, err)
+		}
+		
 		return
 	}
 	
@@ -195,7 +200,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	meta, chunk, err := parseForm(w, r)
+	meta, chunk, err := ParseForm(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -222,7 +227,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go chunkAssemble(meta)
+	go ChunkAssemble(meta)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Chunk uploaded successfully"))
