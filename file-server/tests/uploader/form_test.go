@@ -1,6 +1,7 @@
 package uploader_test
 
 import (
+	"fmt"
 	"bytes"
 	"mime/multipart"
 	"net/http"
@@ -178,7 +179,7 @@ func TestParseForm_InvalidFields(t *testing.T) {
 				"chunkIndex":    "not_a_number",
 				"totalChunks":   "1",
 			},
-			expectedErr: "invalid chunk number"
+			expectedErr: "invalid chunk number",
 		},
 		{
 			name: "negative chunk index",
@@ -190,7 +191,7 @@ func TestParseForm_InvalidFields(t *testing.T) {
 				"chunkIndex":    "-1",
 				"totalChunks":   "1",
 			},
-			expectedErr: "invalid chunk number"
+			expectedErr: "invalid chunk index: -1",
 		},
 		{
 			name: "chunk index out of range",
@@ -202,7 +203,7 @@ func TestParseForm_InvalidFields(t *testing.T) {
 				"chunkIndex":    "1",
 				"totalChunks":   "1",
 			},
-			expectedErr: "invalid chunk number"
+			expectedErr: "invalid chunk index: 1",
 		},
 		{
 			name: "invalid file name",
@@ -214,7 +215,7 @@ func TestParseForm_InvalidFields(t *testing.T) {
 				"chunkIndex":    "0",
 				"totalChunks":   "1",
 			},
-			expectedErr: "invalid file name format"
+			expectedErr: "invalid file name format",
 		},
 		{
 			name: "invalid file id",
@@ -226,7 +227,7 @@ func TestParseForm_InvalidFields(t *testing.T) {
 				"chunkIndex":    "0",
 				"totalChunks":   "1",
 			},
-			expectedErr: "invalid file name format"
+			expectedErr: "invalid file name format",
 		},
 	}
 
@@ -309,7 +310,7 @@ func TestParseForm_InvalidFileExtensions(t *testing.T) {
 			req := createMultipartRequest(t, tc.fields, "chunk", []byte("content"))
 			rr := httptest.NewRecorder()
 			_, _, err := uploader.ParseForm(rr, req)
-			if err == nil || !string.Contains(err.Error(), tc.expectedErr) {
+			if err == nil || !strings.Contains(err.Error(), tc.expectedErr) {
 				t.Fatalf("expected error for invalid file extension, got %v", err)
 			}
 		})
