@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useContext, use } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import config from '../configs/config';
 import { Button } from '@heroui/button';
 import { Progress } from '@heroui/progress';
 import { uploadChunk, createChunk, chunkAndUpload } from '../services/chunkFile';
-
 import { FileContext } from '../contexts/FileContext';
 
 const FileUploader = () => {

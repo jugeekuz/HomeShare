@@ -1,7 +1,7 @@
 import { useRef, useState, useContext } from 'react';
 import { FileContext } from '../contexts/FileContext';
 
-
+import UploadItem from './UploadItem';
 const ArrowIcon = () => (
     <svg width="45px" height="45px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M8 8L12 4M12 4L16 8M12 4V16M4 20H20" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -21,13 +21,18 @@ const FileLoader = () => {
 
     return (
     <div className="flex items-center justify-center">
-        <div 
-            className="flex rounded-full items-center justify-center w-[5.5rem] h-[5.5rem] bg-blue-50 shadow-lg cursor-pointer"
+        {
+            files.length === 0 ?
+                <div 
+                    className="flex rounded-full items-center justify-center w-[5.5rem] h-[5.5rem] bg-blue-50 shadow-lg cursor-pointer"
 
-            onClick={() =>  fileInputRef.current?.click()}
-        >
-            <ArrowIcon/>
-        </div>
+                    onClick={() =>  fileInputRef.current?.click()}
+                >
+                    <ArrowIcon/>
+                </div>
+            :
+                files.map((file, index) => <UploadItem key={`${index}`} file={file}/>)
+        }
         <input
             ref={fileInputRef}
             type="file"
