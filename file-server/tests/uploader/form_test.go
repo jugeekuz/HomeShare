@@ -51,6 +51,30 @@ func createMultipartRequest(t *testing.T, fields map[string]string, fileField st
 // ParseForm Tests
 //
 
+func TestParseForm_Valid(t *testing.T) {
+	fields := map[string]string{
+		"fileId":        uuid.New().String(),
+		"fileName":      "testfile",
+		"fileExtension": ".txt",
+		"md5Hash":     "098f6bcd4621d373cade4e832627b4f6",
+		"chunkIndex":  "0",
+		"totalChunks": "1",
+	}
+	req := createMultipartRequest(t, fields, "chunk", []byte("test"))
+	rr := httptest.NewRecorder()
+	meta, chunk, err := uploader.ParseForm(rr, req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if meta.FileName != "testfile" || meta.FileExtension != ".txt" || meta.ChunkIndex != 0 || meta.TotalChunks != 1 {
+		t.Errorf("metadata not parsed correctly: %+v", meta)
+	}
+	if chunk.File == nil {
+		t.Error("expected valid file in chunk")
+	}
+}
+
+
 func TestParseForm_MissingFields(t *testing.T) {
 	// Table-driven tests for missing required fields.
 	tests := []struct {
@@ -138,111 +162,156 @@ func TestParseForm_MissingFields(t *testing.T) {
 	}
 }
 
-func TestParseForm_InvalidChunkIndex(t *testing.T) {
-	fields := map[string]string{
-		"fileId":        uuid.New().String(),
-		"fileName":      "testfile",
-		"fileExtension": ".txt",
-		"md5Hash":       "d41d8cd98f00b204e9800998ecf8427e",
-		"chunkIndex":    "not_a_number",
-		"totalChunks":   "1",
+func TestParseForm_InvalidFields(t *testing.T) {
+	tests := []struct {
+		name		string
+		fields		map[string]string
+		expectedErr	string
+	} {
+		{
+			name: "non numeric chunk index",
+			fields: map[string]string{
+				"fileId":        uuid.New().String(),
+				"fileName":      "testfile",
+				"fileExtension": ".txt",
+				"md5Hash":       "d41d8cd98f00b204e9800998ecf8427e",
+				"chunkIndex":    "not_a_number",
+				"totalChunks":   "1",
+			},
+			expectedErr: "invalid chunk number"
+		},
+		{
+			name: "negative chunk index",
+			fields: map[string]string{
+				"fileId":        uuid.New().String(),
+				"fileName":      "testfile",
+				"fileExtension": ".txt",
+				"md5Hash":       "d41d8cd98f00b204e9800998ecf8427e",
+				"chunkIndex":    "-1",
+				"totalChunks":   "1",
+			},
+			expectedErr: "invalid chunk number"
+		},
+		{
+			name: "chunk index out of range",
+			fields: map[string]string{
+				"fileId":        uuid.New().String(),
+				"fileName":      "testfile",
+				"fileExtension": ".txt",
+				"md5Hash":       "d41d8cd98f00b204e9800998ecf8427e",
+				"chunkIndex":    "1",
+				"totalChunks":   "1",
+			},
+			expectedErr: "invalid chunk number"
+		},
+		{
+			name: "invalid file name",
+			fields: map[string]string{
+				"fileId":        uuid.New().String(),
+				"fileName":      "test/file",
+				"fileExtension": ".txt",
+				"md5Hash":       "d41d8cd98f00b204e9800998ecf8427e",
+				"chunkIndex":    "0",
+				"totalChunks":   "1",
+			},
+			expectedErr: "invalid file name format"
+		},
+		{
+			name: "invalid file id",
+			fields: map[string]string{
+				"fileId":        "not-a-valid-uuid",
+				"fileName":      "test/file",
+				"fileExtension": ".txt",
+				"md5Hash":       "d41d8cd98f00b204e9800998ecf8427e",
+				"chunkIndex":    "0",
+				"totalChunks":   "1",
+			},
+			expectedErr: "invalid file name format"
+		},
 	}
-	req := createMultipartRequest(t, fields, "chunk", []byte("content"))
-	rr := httptest.NewRecorder()
-	_, _, err := uploader.ParseForm(rr, req)
-	if err == nil || !strings.Contains(err.Error(), "invalid chunk number") {
-		t.Fatalf("expected error for invalid chunk number, got %v", err)
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := createMultipartRequest(t, tc.fields, "chunk", []byte("content"))
+			rr := httptest.NewRecorder()
+			_, _, err := uploader.ParseForm(rr, req)
+			if err == nil || !strings.Contains(err.Error(), tc.expectedErr) {
+				t.Fatalf("expected error containing %q, got %v", tc.expectedErr, err)
+			}
+		})
 	}
 }
 
-func TestParseForm_InvalidChunkIndexOutOfRange(t *testing.T) {
-	fields := map[string]string{
-		"fileId":        uuid.New().String(),
-		"fileName":      "testfile",
-		"fileExtension": ".txt",
-		"md5Hash":       "d41d8cd98f00b204e9800998ecf8427e",
-		"chunkIndex":    "2",
-		"totalChunks":   "2", 
-	}
-	req := createMultipartRequest(t, fields, "chunk", []byte("content"))
-	rr := httptest.NewRecorder()
-	_, _, err := uploader.ParseForm(rr, req)
-	if err == nil || !strings.Contains(err.Error(), "invalid chunk index") {
-		t.Fatalf("expected error for out-of-range chunk index, got %v", err)
-	}
-}
+func TestParseForm_InvalidFileExtensions(t *testing.T) {
+	invalidFileExtensions := []string{
+        // Executable Files
+        ".exe",
+        ".dll",
+        ".bat",
+        ".cmd",
+        ".com",
+        ".msi",
+        ".scr",
+        ".cpl",
+        ".msc",
+        // Scripting & Code Files
+        ".ps1",
+        ".vbs",
+        ".wsf",
+        ".sh",
+        ".php",
+        ".php3",
+        ".php4",
+        ".php5",
+        ".phtml",
+        ".asp",
+        ".aspx",
+        ".jsp",
+        ".cgi",
+        ".pl",
+        ".py",
+        ".rb",
+        ".jar",
+        // Other Potentially Unsafe Files
+        ".reg",
+        ".vbe",
+        ".jse",
+        ".hta",
+        ".lnk",
+    }
+	tests := make([]struct {
+		name        string
+		fields      map[string]string
+		expectedErr string
+	}, len(invalidFileExtensions))
 
-func TestParseForm_InvalidFileName(t *testing.T) {
-	fields := map[string]string{
-		"fileId":        uuid.New().String(),
-		"fileName":      "test/file",
-		"fileExtension": ".txt",
-		"md5Hash":       "d41d8cd98f00b204e9800998ecf8427e",
-		"chunkIndex":    "0",
-		"totalChunks":   "1",
+	for i, ext := range invalidFileExtensions {
+		tests[i] = struct {
+			name        string
+			fields      map[string]string
+			expectedErr string
+		}{
+			name: fmt.Sprintf("Testing for extension %s", ext),
+			fields: map[string]string{
+				"fileId":        uuid.New().String(),
+				"fileName":      "testfile",
+				"fileExtension": ext,
+				"md5Hash":       "d41d8cd98f00b204e9800998ecf8427e",
+				"chunkIndex":    "0",
+				"totalChunks":   "1",
+			},
+			expectedErr: fmt.Sprintf("invalid file extension: %s", ext),
+		}
 	}
-	req := createMultipartRequest(t, fields, "chunk", []byte("content"))
-	rr := httptest.NewRecorder()
-	_, _, err := uploader.ParseForm(rr, req)
-	if err == nil || !strings.Contains(err.Error(), "invalid file name format") {
-		t.Fatalf("expected error for invalid file name, got %v", err)
-	}
-}
 
-func TestParseForm_InvalidFileExtension(t *testing.T) {
-	// TODO: test for more file extensions
-	fields := map[string]string{
-		"fileId":        uuid.New().String(),
-		"fileName":      "testfile",
-		"fileExtension": ".exe",
-		"md5Hash":       "d41d8cd98f00b204e9800998ecf8427e",
-		"chunkIndex":    "0",
-		"totalChunks":   "1",
-	}
-	req := createMultipartRequest(t, fields, "chunk", []byte("content"))
-	rr := httptest.NewRecorder()
-	_, _, err := uploader.ParseForm(rr, req)
-	if err == nil || !strings.Contains(err.Error(), "invalid file extension") {
-		t.Fatalf("expected error for invalid file extension, got %v", err)
-	}
-}
-
-func TestParseForm_InvalidUUID(t *testing.T) {
-	fields := map[string]string{
-		"fileId":        "not-a-valid-uuid",
-		"fileName":      "testfile",
-		"fileExtension": ".txt",
-		"md5Hash":       "d41d8cd98f00b204e9800998ecf8427e",
-		"chunkIndex":    "0",
-		"totalChunks":   "1",
-	}
-	req := createMultipartRequest(t, fields, "chunk", []byte("content"))
-	rr := httptest.NewRecorder()
-	_, _, err := uploader.ParseForm(rr, req)
-	if err == nil || !strings.Contains(err.Error(), "invalid UUID format") {
-		t.Fatalf("expected error for invalid UUID, got %v", err)
-	}
-}
-
-func TestParseForm_Valid(t *testing.T) {
-	fields := map[string]string{
-		"fileId":        uuid.New().String(),
-		"fileName":      "testfile",
-		"fileExtension": ".txt",
-		"md5Hash":     "098f6bcd4621d373cade4e832627b4f6",
-		"chunkIndex":  "0",
-		"totalChunks": "1",
-	}
-	req := createMultipartRequest(t, fields, "chunk", []byte("test"))
-	rr := httptest.NewRecorder()
-	meta, chunk, err := uploader.ParseForm(rr, req)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if meta.FileName != "testfile" || meta.FileExtension != ".txt" || meta.ChunkIndex != 0 || meta.TotalChunks != 1 {
-		t.Errorf("metadata not parsed correctly: %+v", meta)
-	}
-	if chunk.File == nil {
-		t.Error("expected valid file in chunk")
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T){
+			req := createMultipartRequest(t, tc.fields, "chunk", []byte("content"))
+			rr := httptest.NewRecorder()
+			_, _, err := uploader.ParseForm(rr, req)
+			if err == nil || !string.Contains(err.Error(), tc.expectedErr) {
+				t.Fatalf("expected error for invalid file extension, got %v", err)
+			}
+		})
 	}
 }
