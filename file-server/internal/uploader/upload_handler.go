@@ -2,6 +2,7 @@ package uploader
 
 import (
 	// "bufio"
+	"file-server/internal/job"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -33,8 +34,6 @@ type Chunk struct {
 
 var (
 	UploadDir = "uploads"
-)
-var (
 	ChunkDir = "chunks"
 )
 
@@ -142,20 +141,12 @@ func ParseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error)
 	return meta, chunk, nil
 }
 
-func ChunkAssemble(meta ChunkMeta) {
+func ChunkAssemble(meta ChunkMeta, jm *job.JobManager) {
+	defer jm.ReleaseJob(meta.FileId)
+
 	chunksDir := filepath.Join(ChunkDir, meta.FileId)
 	if _, err := os.Stat(chunksDir); os.IsNotExist(err) {
 		log.Printf("Chunk directory %s does not exist for file ID: %s", chunksDir, meta.FileId)
-		return
-	}
-
-	files, err := os.ReadDir(chunksDir)
-	if err != nil {
-		log.Printf("Error reading chunk directory %s: %v", chunksDir, err)
-		return
-	}
-
-	if len(files) != meta.TotalChunks {
 		return
 	}
 
@@ -212,7 +203,7 @@ func ChunkAssemble(meta ChunkMeta) {
 	log.Printf("Successfully assembled file %s", finalFilePath)
 }
 
-func UploadHandler(w http.ResponseWriter, r *http.Request) {
+func UploadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager) {
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -246,7 +237,17 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go ChunkAssemble(meta)
+	files, err := os.ReadDir(chunksDir)
+	if err != nil {
+		http.Error(w, "Error reading chunk directory", http.StatusInternalServerError)
+		return
+	}
+
+	if len(files) == meta.TotalChunks {
+		if (jm.AcquireJob(meta.FileId)) {
+			go ChunkAssemble(meta, jm)
+		}
+	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Chunk uploaded successfully"))
