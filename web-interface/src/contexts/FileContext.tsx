@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { FileMeta, FileItem, FileContextType, FileStore } from '../types';
 
+import { FileMeta, FileItem, FileContextType, FileStore } from '../types';
 import { chunkAndUpload } from '../services/chunkFile';
 
 export const FileContext = createContext<FileContextType | undefined>(undefined);
@@ -33,7 +33,11 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     }
 
     const uploadFiles = async () => {
-
+        for (const fileId in files) {
+            const fileItem = files[fileId];
+            
+            await chunkAndUpload((x) => {}, fileItem.fileMeta, fileItem.file);
+        }
     }
 
     const addMd5Hash = (fileId: string, md5Hash: string) => {
