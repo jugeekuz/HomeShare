@@ -2,10 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Signatra';
-  src: url('assets/fonts/Signatra.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
 
+@font-face {
+    font-family: 'Signatra';
+    src: url('assets/fonts/Signatra.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+  }
+  

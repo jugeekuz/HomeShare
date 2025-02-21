@@ -1,8 +1,7 @@
-import ShareBox from "./components/ShareBox"
-import Share from "./components/ShareBox"
-import NavBar from "./components/NavBar"
-
-const App = () => {
+import React from "react"
+import NavBar from "./components/NavBar.tsx"
+import ShareBox from "./components/ShareBox.tsx"
+const App : React.FC = () => {
 	return (
 		<div
 			className="relative items-center w-[100dvw] h-[100dvh] "
@@ -23,7 +22,7 @@ const App = () => {
 
 			<div className="relative z-[2] h-full w-full flex flex-col items-center justify-center">
 					<NavBar />
-					<ShareBox />
+                    <ShareBox/>
 			</div>
 		</div>
 	)

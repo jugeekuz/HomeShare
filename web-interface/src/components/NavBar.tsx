@@ -1,6 +1,6 @@
 import React from 'react'
 
-const NavBar = () => {
+const NavBar : React.FC = () => {
     return (
         <nav className="flex flex-row justify-start items-center bg-transparent h-16 w-full">
             <div className="flex justify-center items-center w-64">
