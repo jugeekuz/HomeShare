@@ -1,9 +1,10 @@
 package app
 
 import (
-    "net/http"
-    "github.com/rs/cors"
 	"file-server/internal/uploader"
+	"net/http"
+
+	"github.com/rs/cors"
 )
 
 func SetupServer() *http.Server {
@@ -11,12 +12,12 @@ func SetupServer() *http.Server {
 		AllowedOrigins: []string{"http://kuza.gr"},
 		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodOptions},
 	})
-	
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/uploads", uploader.UploadHandler)
+	mux.HandleFunc("/upload", uploader.UploadHandler)
 
 	return &http.Server{
-        Addr:    ":8080",
-        Handler: c.Handler(mux),
-    }
+		Addr:    ":8080",
+		Handler: c.Handler(mux),
+	}
 }

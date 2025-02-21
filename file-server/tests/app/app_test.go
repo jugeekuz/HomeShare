@@ -1,12 +1,11 @@
 package app_test
 
 import (
+	"file-server/internal/app"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"file-server/internal/app"
 )
-
 
 func TestPreflightRequest(t *testing.T) {
 	server := app.SetupServer()
@@ -14,7 +13,7 @@ func TestPreflightRequest(t *testing.T) {
 	defer ts.Close()
 
 	t.Run("OPTIONS response check", func(t *testing.T) {
-		req := httptest.NewRequest("OPTIONS", "/uploads", nil)
+		req := httptest.NewRequest("OPTIONS", "/upload", nil)
 		req.Header.Set("Origin", "http://kuza.gr")
 		req.Header.Set("Access-Control-Request-Method", "POST")
 		rr := httptest.NewRecorder()
@@ -35,7 +34,7 @@ func TestHeadersPost(t *testing.T) {
 	defer ts.Close()
 
 	t.Run("POST headers check", func(t *testing.T) {
-		req := httptest.NewRequest("POST", "/uploads", nil)
+		req := httptest.NewRequest("POST", "/upload", nil)
 		req.Header.Set("Origin", "http://kuza.gr")
 		resp := httptest.NewRecorder()
 
