@@ -76,7 +76,7 @@ export const chunkAndUpload = async (onProgress: ProgressCallback, fileMeta: Fil
 
       let uploadPromises: Promise<UploadResponse>[] = [];
 
-      for (let chunkIndex = 0; chunkIndex <= totalChunks; chunkIndex++) {
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
         const chunkFormData = createChunk(file, fileMeta, chunkIndex);
 
         uploadPromises.push(
