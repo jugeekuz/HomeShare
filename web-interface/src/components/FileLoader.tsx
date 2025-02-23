@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { ProgressBarRefs, ProgressBarRef } from '../types'; 
+import { ProgressBarRef } from '../types'; 
 import ProgressBar from './ProgressBar.tsx'
 import { useFileContext } from '../contexts/FileContext.tsx';
 import UploadItem from './UploadItem.tsx';

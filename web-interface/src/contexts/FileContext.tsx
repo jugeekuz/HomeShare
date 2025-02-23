@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useRef, ReactNode, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { FileMeta, FileItem, FileContextType, FileStore } from '../types';
@@ -8,7 +8,22 @@ export const FileContext = createContext<FileContextType | undefined>(undefined)
 
 export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     const [files, setFiles] = useState<FileStore | null>(null);
+    const totalFileSize = useRef<number>(0);
+    const totalFileSizeSent = useRef<number>(0);
+    const [progress, setProgress] = useState<number>(0);
     const progressBarRefs = useRef<ProgressBarRefs>({});
+
+    useEffect(() => {
+        if (!files) return;
+        
+        totalFileSize.current = 0;
+        totalFileSizeSent.current = 0;
+        
+        for (const fileItem of Object.values(files)) {
+            if (!fileItem?.file) continue;
+            totalFileSize.current += fileItem.file.size;
+        }
+    }, [files]);
 
     const addFile = (file: File) => {
         const fileName = file.name;
@@ -37,12 +52,18 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     const uploadFiles = async () => {
         for (const fileId in files) {
             const fileItem = files[fileId];
+            const fileSize = fileItem.file.size;
 
             const setFileProgress = (progress: number) => {
                 progressBarRefs.current[fileId]?.updateProgress(progress);
             }
-            
-            await chunkAndUpload(setFileProgress, fileItem.fileMeta, fileItem.file);
+
+            const uploadResponse = await chunkAndUpload(setFileProgress, fileItem.fileMeta, fileItem.file);
+
+            if (uploadResponse.success) {
+                totalFileSizeSent.current += fileSize;
+                setProgress((_) => (totalFileSizeSent.current/totalFileSize.current)*100);
+            }
         }
     }
 
@@ -69,7 +90,7 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     }
 
     return (
-        <FileContext.Provider value={{ files, setFiles, addFile, uploadFiles, progressBarRefs, addMd5Hash }}>
+        <FileContext.Provider value={{ files, setFiles, addFile, uploadFiles, progressBarRefs, progress, addMd5Hash }}>
         {children}
         </FileContext.Provider>
     );

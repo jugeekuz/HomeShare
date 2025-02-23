@@ -23,7 +23,8 @@ export interface FileContextType {
     setFiles: React.Dispatch<React.SetStateAction<FileStore | null>>;
     addFile: AddFile;
     uploadFiles: () => Promise<void>;
-    addMd5Hash: (fileId: string, md5Hash: string) => void; 
+    addMd5Hash: (fileId: string, md5Hash: string) => void;
+    progress: number,
     progressBarRefs: React.RefObject<ProgressBarRefs>;
 }
 
