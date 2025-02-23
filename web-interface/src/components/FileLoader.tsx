@@ -1,7 +1,8 @@
-import { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
+import { ProgressBarRefs, ProgressBarRef } from '../types'; 
+import ProgressBar from './ProgressBar.tsx'
 import { useFileContext } from '../contexts/FileContext.tsx';
 import UploadItem from './UploadItem.tsx';
-
 const ArrowIcon : React.FC = () => (
     <svg width="45px" height="45px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M8 8L12 4M12 4L16 8M12 4V16M4 20H20" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -9,6 +10,7 @@ const ArrowIcon : React.FC = () => (
 )
 
 const FileLoader : React.FC = () => {
+    const { progressBarRefs } = useFileContext();
     const { files, addFile } = useFileContext();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -21,8 +23,12 @@ const FileLoader : React.FC = () => {
         }
     }
 
+    const refCallback = (el: ProgressBarRef | null, fileId: string) => {
+        progressBarRefs.current[fileId] = el;
+    }
+
     return (
-        <div className="flex items-center justify-center">
+        <div className="flex ditems-center justify-center">
             {
                 !files || Object.keys(files).length === 0 ?
                     <div 
@@ -33,8 +39,15 @@ const FileLoader : React.FC = () => {
                         <ArrowIcon/>
                     </div>
                 :   
-                    Object.entries(files).map(([key, _], index) => (
-                        <UploadItem key={`${index}`} fileId={key}/>
+                    Object.entries(files).map(([fileId, _], index) => (
+                        <div className="flex flex-col">
+                            <React.Fragment key={fileId}>
+                                <UploadItem fileId={fileId}/>
+                                <ProgressBar 
+                                    ref={(el) => refCallback(el, fileId)} 
+                                    className='w-32'/>
+                            </React.Fragment>
+                        </div>
                     ))
             }
             <input

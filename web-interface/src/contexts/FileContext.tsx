@@ -1,14 +1,14 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useRef, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { FileMeta, FileItem, FileContextType, FileStore } from '../types';
 import { chunkAndUpload } from '../services/chunkFile';
-
+import { ProgressBarRefs } from '../types';
 export const FileContext = createContext<FileContextType | undefined>(undefined);
 
 export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     const [files, setFiles] = useState<FileStore | null>(null);
-    const [progress, setProgress] = useState<number>(0);
+    const progressBarRefs = useRef<ProgressBarRefs>({});
 
     const addFile = (file: File) => {
         const fileName = file.name;
@@ -35,8 +35,12 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     const uploadFiles = async () => {
         for (const fileId in files) {
             const fileItem = files[fileId];
+
+            const setFileProgress = (progress: number) => {
+                progressBarRefs.current[fileId]?.updateProgress(progress);
+            }
             
-            await chunkAndUpload((x) => {}, fileItem.fileMeta, fileItem.file);
+            await chunkAndUpload(setFileProgress, fileItem.fileMeta, fileItem.file);
         }
     }
 
@@ -63,7 +67,7 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     }
 
     return (
-        <FileContext.Provider value={{ files, setFiles, addFile, uploadFiles, progress, addMd5Hash, setProgress }}>
+        <FileContext.Provider value={{ files, setFiles, addFile, uploadFiles, progressBarRefs, addMd5Hash }}>
         {children}
         </FileContext.Provider>
     );

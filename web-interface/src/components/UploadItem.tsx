@@ -64,7 +64,7 @@ const UploadItem : React.FC<{fileId: string}> = ({ fileId }) => {
     }, [file, fileMd5])
 
     return (
-        <div>File</div>
+        <div>File2</div>
     )
 }
 

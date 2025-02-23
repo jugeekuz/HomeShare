@@ -1,3 +1,5 @@
+import { ProgressBarRefs } from "./progress.types";
+
 export interface FileMeta {
     fileId:         string;
     fileName:       string;
@@ -22,6 +24,5 @@ export interface FileContextType {
     addFile: AddFile;
     uploadFiles: () => Promise<void>;
     addMd5Hash: (fileId: string, md5Hash: string) => void; 
-    progress: number;
-    setProgress: React.Dispatch<React.SetStateAction<number>>;
+    progressBarRefs: React.RefObject<ProgressBarRefs>;
 }
