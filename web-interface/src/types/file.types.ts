@@ -1,5 +1,5 @@
 import { ProgressBarRefs } from "./progress.types";
-
+import { DefaultExtensionType, FileIconProps } from "react-file-icon";
 export interface FileMeta {
     fileId:         string;
     fileName:       string;
@@ -25,4 +25,9 @@ export interface FileContextType {
     uploadFiles: () => Promise<void>;
     addMd5Hash: (fileId: string, md5Hash: string) => void; 
     progressBarRefs: React.RefObject<ProgressBarRefs>;
+}
+
+export interface FileIconType {
+    fileExtension: string;
+    fileStyle: Record<DefaultExtensionType, Partial<FileIconProps>> | Partial<FileIconProps>
 }

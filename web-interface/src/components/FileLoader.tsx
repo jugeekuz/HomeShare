@@ -28,7 +28,7 @@ const FileLoader : React.FC = () => {
     }
 
     return (
-        <div className="flex ditems-center justify-center">
+        <div className="flex items-center justify-center w-full h-full">
             {
                 !files || Object.keys(files).length === 0 ?
                     <div 
@@ -39,16 +39,19 @@ const FileLoader : React.FC = () => {
                         <ArrowIcon/>
                     </div>
                 :   
-                    Object.entries(files).map(([fileId, _], index) => (
-                        <div className="flex flex-col">
-                            <React.Fragment key={fileId}>
-                                <UploadItem fileId={fileId}/>
-                                <ProgressBar 
-                                    ref={(el) => refCallback(el, fileId)} 
-                                    className='w-32'/>
-                            </React.Fragment>
-                        </div>
-                    ))
+                    <div className="flex flex-row flex-wrap overflow-y-scroll items-start w-full h-full gap-x-7 gap-y-4 p-8 px-10">
+                        {
+                            Object.entries(files).map(([fileId, _], index) => (
+                                <div className="flex flex-col max-w-12" key={fileId}>
+                                    <UploadItem 
+                                        fileId={fileId}/>
+                                    <ProgressBar 
+                                        ref={(el) => refCallback(el, fileId)} 
+                                        className='w-12 mt-1'/>
+                                </div>
+                            ))
+                        }
+                    </div>
             }
             <input
                 ref={fileInputRef}

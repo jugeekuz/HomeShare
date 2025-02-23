@@ -14,11 +14,10 @@ const ProgressBar = forwardRef<ProgressBarRef, ProgressBarProps>((props, ref) =>
   
     return (
         <>
-        <Progress 
-            isStriped 
+        <Progress  
             aria-label="Loading..." 
             className={props.className} 
-            color="secondary" 
+            color="primary" 
             value={progress}
         />
         </>

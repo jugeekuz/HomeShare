@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import config from '../configs/config'
+import { FileIcon, defaultStyles, DefaultExtensionType } from 'react-file-icon';
+import { FileIconType } from '../types';
 import SparkMD5 from 'spark-md5';
 import { useFileContext } from '../contexts/FileContext.tsx';
 
@@ -7,6 +9,7 @@ const UploadItem : React.FC<{fileId: string}> = ({ fileId }) => {
     const MAX_FILE_SIZE_MB = config.MAX_FILE_SIZE_MB;
     const { files, addMd5Hash } = useFileContext();
     const [file, setFile] = useState<File | null>(null);
+    const [fileStyle, setFileStyle] = useState<FileIconType>({fileExtension: '', fileStyle: defaultStyles});
     const [fileMd5, setFileMd5] = useState<string | null>(null);
 
     useEffect(() => {
@@ -17,6 +20,18 @@ const UploadItem : React.FC<{fileId: string}> = ({ fileId }) => {
         }
         setFile(files[fileId].file);
     }, [])
+
+    useEffect(() => {
+        if(!files || !file) return;
+        const fileExt = files[fileId].fileMeta.fileExtension.replace(/^\./, "").toLowerCase() as DefaultExtensionType;
+
+
+        setFileStyle({
+            fileExtension: fileExt,
+            fileStyle: (defaultStyles[fileExt] || defaultStyles)
+        })
+        
+    },[file])
 
     useEffect(() => {
         if (!file) return;
@@ -64,7 +79,7 @@ const UploadItem : React.FC<{fileId: string}> = ({ fileId }) => {
     }, [file, fileMd5])
 
     return (
-        <div>File2</div>
+        <FileIcon color='#fcba03' extension={fileStyle.fileExtension} {...fileStyle.fileStyle}  />
     )
 }
 
