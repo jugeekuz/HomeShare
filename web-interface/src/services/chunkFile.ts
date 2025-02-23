@@ -84,7 +84,7 @@ export const chunkAndUpload = async (onProgress: ProgressCallback, fileMeta: Fil
         );
         
         // Upload N chunks concurrently
-        if (uploadPromises.length >= CONCURRENT_CHUNKS || chunkIndex === totalChunks) {
+        if (uploadPromises.length >= CONCURRENT_CHUNKS || chunkIndex === totalChunks-1) {
           const results = await Promise.all(uploadPromises);
           if (results.some(res => !res.success)) throw new Error("Chunk upload failed");
           uploadPromises = []; // Reset for the next batch
