@@ -12,12 +12,14 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
 
     const addFile = (file: File) => {
         const fileName = file.name;
-        const parts = fileName.split(/(\..+)$/);
+        const lastDotIndex = fileName.lastIndexOf('.');
+        const baseName = lastDotIndex !== -1 ? fileName.slice(0, lastDotIndex) : fileName;
+        const extension = lastDotIndex !== -1 ? fileName.slice(lastDotIndex) : '';
 
         const fileMeta : FileMeta = {
             fileId:         uuidv4(),
-            fileName:       parts[0],
-            fileExtension:  parts[1] || '',
+            fileName:       baseName,
+            fileExtension:  extension,
             md5Hash:        ""
         }
 
