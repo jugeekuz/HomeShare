@@ -1,11 +1,12 @@
 import React from 'react';
 import { Button } from '@heroui/button';
+import { Spinner } from '@heroui/spinner';
 import { Progress } from '@heroui/progress';
 
 import { useFileContext } from '../contexts/FileContext.tsx';
 
 const FileUploader : React.FC = () => {
-    const { files, progress, uploadFiles } = useFileContext();
+    const { files, filesReady, progress, uploadFiles } = useFileContext();
 
     return (
         <>
@@ -20,12 +21,12 @@ const FileUploader : React.FC = () => {
         )}
         <Button
             color="primary"
-            isDisabled={!files || Object.keys(files).length === 0}
+            isDisabled={!files || Object.keys(files).length === 0 || !filesReady}
             className="text-md w-[80%]"
             size="lg"
             onPress={uploadFiles}
         >
-            Send Files
+            {(files && !filesReady) ? <Spinner color="default"/> : "Send Files"}
         </Button>
         </>
     )

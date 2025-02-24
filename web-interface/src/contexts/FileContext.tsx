@@ -8,11 +8,13 @@ export const FileContext = createContext<FileContextType | undefined>(undefined)
 
 export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     const [files, setFiles] = useState<FileStore | null>(null);
+    const [filesReady, setFilesReady] = useState<boolean>(false);
     const totalFileSize = useRef<number>(0);
     const totalFileSizeSent = useRef<number>(0);
     const [progress, setProgress] = useState<number>(0);
     const progressBarRefs = useRef<ProgressBarRefs>({});
 
+    // Calculate total size
     useEffect(() => {
         if (!files) return;
         
@@ -24,6 +26,12 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
             totalFileSize.current += fileItem.file.size;
         }
     }, [files]);
+
+    // See if all hashes are calculated
+    useEffect(() => {
+        if (!files) return;
+        setFilesReady(Object.values(files).every(fileItem => !!fileItem?.fileMeta.md5Hash))
+    },[files])
 
     const addFile = (file: File) => {
         const fileName = file.name;
@@ -90,7 +98,7 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     }
 
     return (
-        <FileContext.Provider value={{ files, setFiles, addFile, uploadFiles, progressBarRefs, progress, addMd5Hash }}>
+        <FileContext.Provider value={{ files, setFiles, addFile, filesReady, uploadFiles, progressBarRefs, progress, addMd5Hash }}>
         {children}
         </FileContext.Provider>
     );
