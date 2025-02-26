@@ -8,5 +8,32 @@
     src: url('assets/fonts/Signatra.otf') format('opentype');
     font-weight: normal;
     font-style: normal;
-  }
-  
+}
+
+@font-face {
+    font-family: 'LinikSans';
+    src: url('/assets/fonts/LinikSans-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'LinikSans';
+    src: url('/assets/fonts/LinikSans-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'LinikSans';
+    src: url('/assets/fonts/LinikSans-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'LinikSans';
+    src: url('/assets/fonts/LinikSans-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
