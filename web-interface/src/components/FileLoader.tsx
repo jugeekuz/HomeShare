@@ -1,17 +1,23 @@
 import React, { useRef } from 'react';
-import { ProgressBarRef } from '../types'; 
-import ProgressBar from './ProgressBar.tsx'
+import { FileIcon, defaultStyles } from 'react-file-icon';
+
 import { useFileContext } from '../contexts/FileContext.tsx';
-import UploadItem from './UploadItem.tsx';
-const ArrowIcon : React.FC = () => (
-    <svg width="45px" height="45px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 8L12 4M12 4L16 8M12 4V16M4 20H20" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
+import { LuUpload } from "react-icons/lu";
+
+
+const FileUploadIcon : React.FC<{className: string | null, active?: boolean}> = ({className, active = false}) => (
+    <div className={`relative w-12 h-12 ${className}`}>
+        <div className="w-3/4 h-1/4">
+            <FileIcon color='#f0f4f7' extension="" {...defaultStyles}/>
+        </div>
+        <div className={`absolute flex ${active ? "bg-blue-700" : "bg-[#051d41]"} rounded-full w-[50%] h-[50%] right-0 bottom-0 p-[5px] justify-center items-center`}>
+            <LuUpload className='text-gray-50 w-full h-full'/>
+        </div>
+    </div>
 )
 
 const FileLoader : React.FC = () => {
-    const { progressBarRefs } = useFileContext();
-    const { files, addFile } = useFileContext();
+    const { addFile } = useFileContext();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const handleFileChange = (e : React.ChangeEvent<HTMLInputElement>) => {
@@ -22,37 +28,23 @@ const FileLoader : React.FC = () => {
             addFile(file);
         }
     }
-
-    const refCallback = (el: ProgressBarRef | null, fileId: string) => {
-        progressBarRefs.current[fileId] = el;
-    }
-
     return (
-        <div className="flex items-center justify-center w-full h-full">
-            {
-                !files || Object.keys(files).length === 0 ?
-                    <div 
-                        className="flex rounded-full items-center justify-center w-[5.5rem] h-[5.5rem] bg-blue-50 shadow-lg cursor-pointer"
-
-                        onClick={() =>  fileInputRef.current?.click()}
+        <div className="flex flex-col items-center justify-center w-full h-full">
+            <div className="w-full h-full p-2">
+                <div 
+                    className="flex flex-col w-full h-full justify-center items-center rounded-lg border-dashed border-2 border-gray-300 p-10 cursor-pointer"
+                    onClick={() =>  fileInputRef.current?.click()}
                     >
-                        <ArrowIcon/>
-                    </div>
-                :   
-                    <div className="flex flex-row flex-wrap overflow-y-scroll items-start w-full h-full gap-x-7 gap-y-4 p-8 px-10">
-                        {
-                            Object.entries(files).map(([fileId, _], index) => (
-                                <div className="flex flex-col max-w-12" key={fileId}>
-                                    <UploadItem 
-                                        fileId={fileId}/>
-                                    <ProgressBar 
-                                        ref={(el) => refCallback(el, fileId)} 
-                                        className='w-12 mt-1'/>
-                                </div>
-                            ))
-                        }
-                    </div>
-            }
+                    <FileUploadIcon className="w-12 h-12"/>
+
+                    <span className="font-linik font-light text-gray-800 text-sm mt-2">
+                        Drag & Drop or <span className="text-blue-500">Choose file</span> to upload
+                    </span>
+                    <span className="font-linik font-light text-gray-400 text-xs ">
+                        Maximum supported file size 4MB
+                    </span>
+                </div>
+            </div>
             <input
                 ref={fileInputRef}
                 type="file"
