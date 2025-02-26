@@ -22,6 +22,7 @@ export interface FileContextType {
     files: FileStore | null;
     setFiles: React.Dispatch<React.SetStateAction<FileStore | null>>;
     addFile: AddFile;
+    deleteFile: (fileId: string) => void;
     uploadFiles: () => Promise<void>;
     addMd5Hash: (fileId: string, md5Hash: string) => void;
     filesReady: boolean;
