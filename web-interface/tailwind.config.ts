@@ -8,7 +8,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        signatra: ['Signatra', 'cursive']
+        signatra: ['Signatra', 'cursive'],
+        linik: ["LinikSans", "sans-serif"],
       },
     },
   },
