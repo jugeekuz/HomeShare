@@ -58,6 +58,16 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
         }))
     }
 
+    const deleteFile = (fileId: string) => {
+        if (!fileId || !files || !files[fileId]) return;
+        
+        const newFiles = {...files}
+
+        delete newFiles[fileId];
+
+        setFiles(newFiles);
+    }
+
     const uploadFiles = async () => {
         for (const fileId in files) {
             setFilesUploading(true);
@@ -102,7 +112,7 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     }
 
     return (
-        <FileContext.Provider value={{ files, setFiles, addFile, filesReady, uploadFiles, progressBarRefs, progress, filesUploading, addMd5Hash }}>
+        <FileContext.Provider value={{ files, setFiles, addFile, deleteFile, filesReady, uploadFiles, progressBarRefs, progress, filesUploading, addMd5Hash }}>
         {children}
         </FileContext.Provider>
     );
