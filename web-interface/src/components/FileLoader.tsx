@@ -38,7 +38,7 @@ const FileLoader : React.FC = () => {
                     <FileUploadIcon className="w-12 h-12"/>
 
                     <span className="font-linik font-light text-gray-800 text-sm mt-2">
-                        Drag & Drop or <span className="text-blue-500">Choose file</span> to upload
+                        Drag & Drop or <span className="text-blue-500">Choose files</span> to upload
                     </span>
                     <span className="font-linik font-light text-gray-400 text-xs ">
                         Maximum supported file size 4MB
