@@ -24,6 +24,8 @@ export interface FileContextType {
     addFile: AddFile;
     uploadFiles: () => Promise<void>;
     addMd5Hash: (fileId: string, md5Hash: string) => void;
+    filesReady: boolean;
+    filesUploading: boolean;
     progress: number,
     progressBarRefs: React.RefObject<ProgressBarRefs>;
 }

@@ -9,6 +9,7 @@ export const FileContext = createContext<FileContextType | undefined>(undefined)
 export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     const [files, setFiles] = useState<FileStore | null>(null);
     const [filesReady, setFilesReady] = useState<boolean>(false);
+    const [filesUploading, setFilesUploading] = useState<boolean>(false);
     const totalFileSize = useRef<number>(0);
     const totalFileSizeSent = useRef<number>(0);
     const [progress, setProgress] = useState<number>(0);
@@ -59,6 +60,8 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
 
     const uploadFiles = async () => {
         for (const fileId in files) {
+            setFilesUploading(true);
+
             const fileItem = files[fileId];
             const fileSize = fileItem.file.size;
 
@@ -73,6 +76,7 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
                 setProgress((_) => (totalFileSizeSent.current/totalFileSize.current)*100);
             }
         }
+        setFilesUploading(false);
     }
 
     const addMd5Hash = (fileId: string, md5Hash: string) => {
@@ -98,7 +102,7 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     }
 
     return (
-        <FileContext.Provider value={{ files, setFiles, addFile, filesReady, uploadFiles, progressBarRefs, progress, addMd5Hash }}>
+        <FileContext.Provider value={{ files, setFiles, addFile, filesReady, uploadFiles, progressBarRefs, progress, filesUploading, addMd5Hash }}>
         {children}
         </FileContext.Provider>
     );

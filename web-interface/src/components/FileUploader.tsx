@@ -6,11 +6,11 @@ import { Progress } from '@heroui/progress';
 import { useFileContext } from '../contexts/FileContext.tsx';
 
 const FileUploader : React.FC = () => {
-    const { files, filesReady, progress, uploadFiles } = useFileContext();
+    const { files, filesReady, progress, filesUploading, uploadFiles } = useFileContext();
 
     return (
         <>
-        { progress !== 0 && (
+        {/* { progress !== 0 && (
             <Progress 
             isStriped 
             aria-label="Loading..." 
@@ -18,16 +18,19 @@ const FileUploader : React.FC = () => {
             color="secondary" 
             value={progress}
             />
-        )}
-        <Button
-            color="primary"
-            isDisabled={!files || Object.keys(files).length === 0 || !filesReady}
-            className="text-md w-[80%]"
-            size="lg"
-            onPress={uploadFiles}
-        >
-            {(files && !filesReady) ? <Spinner color="default"/> : "Send Files"}
-        </Button>
+        )} */}
+        <div className="w-full px-2 mb-2">
+            <Button
+                color="primary"
+                isDisabled={!files || Object.keys(files).length === 0 || !filesReady}
+                className="text-md w-full"
+                size="md"
+                radius="sm"
+                onPress={uploadFiles}
+            >
+                {((files && !filesReady) || filesUploading) ? <Spinner color="default"/> : "Send Files"}
+            </Button>
+        </div>
         </>
     )
 }
