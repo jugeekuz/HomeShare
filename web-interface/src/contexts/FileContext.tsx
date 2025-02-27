@@ -76,7 +76,7 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
             const fileSize = fileItem.file.size;
 
             const setFileProgress = (progress: number) => {
-                progressBarRefs.current[fileId]?.updateProgress(progress);
+                progressBarRefs.current[fileId]?.updateProgress(Math.ceil(progress));
             }
 
             const uploadResponse = await chunkAndUpload(setFileProgress, fileItem.fileMeta, fileItem.file);
