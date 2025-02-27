@@ -10,7 +10,7 @@ import (
 
 func SetupServer(jm *job.JobManager) *http.Server {
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://kuza.gr"},
+		AllowedOrigins: []string{"http://kuza.gr", "http://kuza.gr/", "https://kuza.gr", "https://kuza.gr/"},
 		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodOptions},
 	})
 

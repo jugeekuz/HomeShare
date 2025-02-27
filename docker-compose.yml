@@ -23,16 +23,17 @@ services:
       - "8080:8080"
     volumes:
       - ./files:/app/uploads
-      - /app/chunks
+      # - ./chunks:/app/chunks
+      # - /app/chunks
   web-interface-dev:
     build:
       context: ./web-interface
       dockerfile: ../dockerfiles/web-interface-dev.dockerfile
     ports:
-      - "3001:3001"
+      - "80:3001"
     volumes:
-      - /app/node_modules
       - ./web-interface:/app
+      - /app/node_modules
     tty: true
     stdin_open: true
   # web-interface:

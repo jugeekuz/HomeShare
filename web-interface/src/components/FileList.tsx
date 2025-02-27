@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { ProgressBarRef } from '../types'; 
 import "react-perfect-scrollbar/dist/css/styles.css";
 import PerfectScrollbar from 'react-perfect-scrollbar';
+import { ScrollShadow } from '@heroui/react';
 import ProgressBar from './ProgressBar.tsx'
 import { useFileContext } from '../contexts/FileContext.tsx';
 import UploadItem from './UploadItem.tsx';
@@ -9,6 +10,21 @@ import { LuTrash2 } from "react-icons/lu";
 
 const FileBox : React.FC<{fileId: string, refCallback: (el: ProgressBarRef | null, fileId: string) => void}> = ({fileId, refCallback}) => {
     const { files, deleteFile } = useFileContext();
+
+    const convertBytes = (bytes: number) : string => {
+        if (bytes === 0) return "0 B";
+
+        const mapping = ["B", "kB", "MB", "GB", "TB"];
+        const n = Math.floor(Math.log(bytes) / Math.log(1024));
+        
+        if (n >= mapping.length) throw new Error("Byte string is too large to convert.");
+
+        const value = bytes / (1024 ** n);
+        
+        const formattedValue = parseFloat(value.toFixed(2));
+
+        return `${formattedValue} ${mapping[n]}`;
+    }
 
     return (
     <div className="flex flex-col justify-center items-center w-full h-[4.5rem] rounded-md bg-gray-100 px-2 mb-1 border-1 border-gray-200" key={fileId}>
@@ -20,9 +36,15 @@ const FileBox : React.FC<{fileId: string, refCallback: (el: ProgressBarRef | nul
                 <span className="font-linik text-sm text-gray-700 font-bold">
                     {files && files[fileId].fileMeta.fileName}
                 </span>
-                <span className="text-xs text-gray-600">
-                    {files && files[fileId].fileMeta.fileExtension}
-                </span>
+                <div className="flex flex-row justify-start items-center">
+                    <span className="text-xs text-gray-600">
+                        {files && convertBytes(files[fileId].file.size)}
+                    </span>
+                    <span className="text-xs text-gray-500 mx-[0.32rem]">•</span>
+                    <span className=" text-xs text-gray-600">
+                        {files && files[fileId].fileMeta.fileExtension}
+                    </span>
+                </div>
             </div>
             <div 
                 className="absolute flex justify-center items-center rounded-full bg-white w-8 h-8 top-2 right-0 border border-gray-200 cursor-pointer"

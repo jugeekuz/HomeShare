@@ -55,7 +55,7 @@ func getUniqueFileName(path string) string {
 }
 
 func ParseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error) {
-	const MAX_MBYTES = 1
+	const MAX_MBYTES = 5
 
 	r.Body = http.MaxBytesReader(w, r.Body, (MAX_MBYTES<<20)+1024)
 
