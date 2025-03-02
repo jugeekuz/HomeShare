@@ -14,5 +14,11 @@ func main() {
 	jm := job.NewJobManager(job_timeout)
 
 	server := app.SetupServer(jm)
-	log.Fatal(server.ListenAndServe())
+
+	server.Addr = ":443"
+
+	log.Fatal(server.ListenAndServeTLS(
+		"./certs/fullchain.pem",
+		"./certs/privkey.pem",
+	))
 }

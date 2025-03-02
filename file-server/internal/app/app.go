@@ -10,7 +10,7 @@ import (
 
 func SetupServer(jm *job.JobManager) *http.Server {
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://kuza.gr", "http://kuza.gr/", "https://kuza.gr", "https://kuza.gr/"},
+		AllowedOrigins: []string{"https://kuza.gr", "https://kuza.gr/"},
 		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodOptions},
 	})
 
@@ -20,7 +20,7 @@ func SetupServer(jm *job.JobManager) *http.Server {
 	})
 
 	return &http.Server{
-		Addr:    ":8080",
+		Addr:    ":443",
 		Handler: c.Handler(mux),
 	}
 }

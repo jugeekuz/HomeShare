@@ -20,9 +20,10 @@ services:
     tty: true
     stdin_open: true
     ports:
-      - "8080:8080"
+      - "443:443"
     volumes:
       - ./files:/app/uploads
+      - ./certs:/app/certs
       # - ./chunks:/app/chunks
       # - /app/chunks
   web-interface-dev:
@@ -36,6 +37,7 @@ services:
       - /app/node_modules
     tty: true
     stdin_open: true
+    
   # web-interface:
   #   build:
   #     context: ./web-interface
