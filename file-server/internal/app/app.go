@@ -3,6 +3,8 @@ package app
 import (
 	"file-server/internal/job"
 	"file-server/internal/uploader"
+	"file-server/internal/downloader"
+	"file-server/internal/auth"
 	"net/http"
 
 	"github.com/rs/cors"
@@ -17,6 +19,22 @@ func SetupServer(jm *job.JobManager) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		uploader.UploadHandler(w, r, jm)
+	})
+
+	mux.HandleFunc("/download", func(w http.ResponseWriter, r *http.Request) {
+		downloader.DownloadHandler(w, r, jm)
+	})
+
+	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		auth.LoginHandler(w, r)
+	})
+
+	mux.HandleFunc("/refresh", func(w http.ResponseWriter, r *http.Request) {
+		auth.RefreshHandler(w, r)
+	})
+
+	mux.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+		auth.LogoutHandler(w, r)
 	})
 
 	return &http.Server{
