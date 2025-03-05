@@ -9,11 +9,13 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"time"
 	"testing"
 
 	"github.com/google/uuid"
 
 	"file-server/internal/uploader"
+	"file-server/internal/job"
 )
 
 
@@ -34,8 +36,10 @@ func TestUploadHandler_Valid(t *testing.T) {
 	req := createMultipartRequest(t, fields, "chunk", []byte("chunkdata"))
 	rr := httptest.NewRecorder()
 
-	// Call the handler.
-	uploader.UploadHandler(rr, req)
+	job_timeout := 45 * time.Second
+	jm := job.NewJobManager(job_timeout)
+
+	uploader.UploadHandler(rr, req, jm)
 	if rr.Code != http.StatusOK {
 		t.Errorf("expected status %d, got %d", http.StatusOK, rr.Code)
 	}
@@ -66,7 +70,11 @@ func TestChunkAssemble_NoChunkDir(t *testing.T) {
 		ChunkIndex:  0,
 		TotalChunks: 1,
 	}
-	uploader.ChunkAssemble(meta)
+
+	job_timeout := 45 * time.Second
+	jm := job.NewJobManager(job_timeout)
+
+	uploader.ChunkAssemble(meta, jm)
 	finalFilePath := filepath.Join(uploadDir, meta.FileName+meta.FileExtension)
 	if _, err := os.Stat(finalFilePath); !os.IsNotExist(err) {
 		t.Errorf("final file should not exist as chunk directory doesn't exist")
@@ -98,7 +106,10 @@ func TestChunkAssemble_IncompleteChunks(t *testing.T) {
 		ChunkIndex:    0,
 		TotalChunks:   2,
 	}
-	uploader.ChunkAssemble(meta)
+	job_timeout := 45 * time.Second
+	jm := job.NewJobManager(job_timeout)
+
+	uploader.ChunkAssemble(meta, jm)
 	finalFilePath := filepath.Join(uploadDir, meta.FileName+meta.FileExtension)
 	if _, err := os.Stat(finalFilePath); !os.IsNotExist(err) {
 		t.Errorf("final file should not be assembled because not all chunks are present")
@@ -138,7 +149,10 @@ func TestChunkAssemble_Success(t *testing.T) {
 		ChunkIndex:    0,
 		TotalChunks:   len(chunkContents),
 	}
-	uploader.ChunkAssemble(meta)
+	job_timeout := 45 * time.Second
+	jm := job.NewJobManager(job_timeout)
+
+	uploader.ChunkAssemble(meta, jm)
 
 	finalFilePath := filepath.Join(uploadDir, meta.FileName+meta.FileExtension)
 	data, err := os.ReadFile(finalFilePath)
@@ -180,7 +194,10 @@ func TestChunkAssemble_MD5Mismatch(t *testing.T) {
 		ChunkIndex:    0,
 		TotalChunks:   len(chunkContents),
 	}
-	uploader.ChunkAssemble(meta)
+	job_timeout := 45 * time.Second
+	jm := job.NewJobManager(job_timeout)
+
+	uploader.ChunkAssemble(meta, jm)
 
 	finalFilePath := filepath.Join(uploadDir, meta.FileName+meta.FileExtension)
 	if _, err := os.Stat(finalFilePath); !os.IsNotExist(err) {
@@ -189,21 +206,17 @@ func TestChunkAssemble_MD5Mismatch(t *testing.T) {
 }
 
 func TestChunkAssemble_FileAlreadyExists(t *testing.T) {
-    // Create temporary directories for the upload and chunk storage.
     uploadDir := t.TempDir()
     chunkDir := t.TempDir()
 
-    // Ensure the uploader uses our temporary directories.
     uploader.UploadDir = uploadDir
     uploader.ChunkDir = chunkDir
 
-    // Setup an existing file in the upload directory.
     originalPath := filepath.Join(uploadDir, "duplicate.txt")
     if err := os.WriteFile(originalPath, []byte("existing content"), 0644); err != nil {
         t.Fatal(err)
     }
 
-    // Setup test chunk in a new chunks directory.
     fileID := uuid.New().String()
     chunksDir := filepath.Join(chunkDir, fileID)
     if err := os.MkdirAll(chunksDir, 0755); err != nil {
@@ -216,7 +229,6 @@ func TestChunkAssemble_FileAlreadyExists(t *testing.T) {
         t.Fatal(err)
     }
 
-    // Create metadata with the MD5 hash of the chunk content.
     hasher := md5.New()
     hasher.Write(chunkContent)
     expectedHash := hex.EncodeToString(hasher.Sum(nil))
@@ -228,17 +240,16 @@ func TestChunkAssemble_FileAlreadyExists(t *testing.T) {
         TotalChunks:   1,
         MD5Hash:       expectedHash,
     }
+	job_timeout := 45 * time.Second
+	jm := job.NewJobManager(job_timeout)
 
-    // Call the function under test.
-    uploader.ChunkAssemble(meta)
+    uploader.ChunkAssemble(meta, jm)
 
-    // Verify that the new file was created with a "(1)" suffix.
     expectedPath := filepath.Join(uploadDir, "duplicate (1).txt")
     if _, err := os.Stat(expectedPath); os.IsNotExist(err) {
         t.Fatalf("Renamed file was not created at expected path: %s", expectedPath)
     }
 
-    // Verify that the original file remains unchanged.
     originalContent, err := os.ReadFile(originalPath)
     if err != nil {
         t.Fatal(err)
@@ -247,7 +258,6 @@ func TestChunkAssemble_FileAlreadyExists(t *testing.T) {
         t.Error("Original file was modified")
     }
 
-    // Verify that the new file has the correct content.
     newContent, err := os.ReadFile(expectedPath)
     if err != nil {
         t.Fatal(err)
@@ -256,7 +266,6 @@ func TestChunkAssemble_FileAlreadyExists(t *testing.T) {
         t.Error("New file content mismatch")
     }
 
-    // Verify that the chunks directory has been deleted.
     if _, err := os.Stat(chunksDir); !os.IsNotExist(err) {
         t.Error("Chunks directory was not deleted")
     }

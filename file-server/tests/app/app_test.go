@@ -1,14 +1,20 @@
 package app_test
 
 import (
-	"file-server/internal/app"
+	"time"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"file-server/internal/app"
+	"file-server/internal/job"
 )
 
 func TestPreflightRequest(t *testing.T) {
-	server := app.SetupServer()
+	job_timeout := 45 * time.Second
+	jm := job.NewJobManager(job_timeout)
+
+	server := app.SetupServer(jm)
 	ts := httptest.NewServer(server.Handler)
 	defer ts.Close()
 
@@ -29,7 +35,10 @@ func TestPreflightRequest(t *testing.T) {
 func TestHeadersPost(t *testing.T) {
 	expectedOrigin := "http://kuza.gr"
 
-	server := app.SetupServer()
+	job_timeout := 45 * time.Second
+	jm := job.NewJobManager(job_timeout)
+
+	server := app.SetupServer(jm)
 	ts := httptest.NewServer(server.Handler)
 	defer ts.Close()
 
@@ -47,7 +56,10 @@ func TestHeadersPost(t *testing.T) {
 
 }
 func TestNonExistentEndpoints(t *testing.T) {
-	server := app.SetupServer()
+	job_timeout := 45 * time.Second
+	jm := job.NewJobManager(job_timeout)
+
+	server := app.SetupServer(jm)
 	ts := httptest.NewServer(server.Handler)
 	defer ts.Close()
 
