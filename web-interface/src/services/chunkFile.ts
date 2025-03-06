@@ -18,8 +18,8 @@ export const uploadChunk = async (chunkFormData: FormData, callback: Callback, r
 
     try {
         const response = await fetch(config.UPLOAD_URL, {
-        method: "POST",
-        body: chunkFormData,
+            method: "POST",
+            body: chunkFormData,
         });
 
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
