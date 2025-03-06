@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { FileIcon, defaultStyles } from 'react-file-icon';
+import { LuUpload } from "react-icons/lu";
 
 import { useFileContext } from '../contexts/FileContext.tsx';
-import { LuUpload } from "react-icons/lu";
 
 
 const FileUploadIcon : React.FC<{className: string | null, active?: boolean}> = ({className, active = false}) => (
@@ -37,10 +37,10 @@ const FileLoader : React.FC = () => {
                     >
                     <FileUploadIcon className="w-12 h-12"/>
 
-                    <span className="font-linik font-light text-gray-800 text-sm mt-2">
+                    <span className="font-linik  text-gray-800 text-sm mt-2">
                         Drag & Drop or <span className="text-blue-500">Choose files</span> to upload
                     </span>
-                    <span className="font-linik font-light text-gray-400 text-xs ">
+                    <span className="font-linik  text-gray-400 text-xs ">
                         Maximum supported file size 4MB
                     </span>
                 </div>
