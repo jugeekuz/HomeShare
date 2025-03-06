@@ -1,6 +1,6 @@
 import React from "react"
 import NavBar from "./components/NavBar.tsx"
-import ShareBox from "./components/ShareBox.tsx"
+import AppRoutes from "./AppRoutes.tsx"
 const App : React.FC = () => {
 	return (
 		<div
@@ -22,7 +22,7 @@ const App : React.FC = () => {
 
 			<div className="relative z-[2] h-full w-full flex flex-col items-center justify-center">
 					<NavBar />
-                    <ShareBox/>
+                    <AppRoutes/>
 			</div>
 		</div>
 	)
