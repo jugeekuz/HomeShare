@@ -11,8 +11,8 @@ type Config struct {
 
 func LoadConfig() *Config {
 	return &Config{
-		UploadDir: 		getEnv("UPLOAD_DIR", "/uploads"),
-		SharingDir: 	getEnv("SHARING_DIR", "/temp"),
+		UploadDir: 		getEnv("UPLOAD_DIR", "uploads"),
+		SharingDir: 	getEnv("SHARING_DIR", "temp"),
 	}
 }
 
