@@ -48,6 +48,10 @@ func SetupServer(jm *job.JobManager) *http.Server {
 		sharing.AddSharingFilesHandler(w, r, jm)
 	})
 
+	mux.HandleFunc("/share-files", func(w http.ResponseWriter, r *http.Request) {
+		sharing.GetSharingFilesHandler(w, r)
+	})
+
 	return &http.Server{
 		Addr:    ":443",
 		Handler: c.Handler(mux),

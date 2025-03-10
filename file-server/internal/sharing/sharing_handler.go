@@ -31,6 +31,10 @@ type SharingResponse struct {
 	FolderId 		string `json:"folder_id"`
 }
 
+type SharingFilesResponse struct {
+	Files		[]string `json:"files"`
+}
+
 func SharingHandler(w http.ResponseWriter, r *http.Request) {
 	cfg := config.LoadConfig()
 
@@ -112,4 +116,34 @@ func AddSharingFilesHandler(w http.ResponseWriter, r *http.Request, jm *job.JobM
 
 	zipFileName := fmt.Sprintf("%s.zip", folderId)
 	go helpers.CreateZip(folderDir, zipFileName, files, jm)
+}
+
+func GetSharingFilesHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	cfg := config.LoadConfig()
+
+	folderId := r.URL.Query().Get("folder_id")
+	if folderId == "" {
+		http.Error(w, "Missing folder_id parameter", http.StatusBadRequest)
+		return
+	}
+
+	folderPath := filepath.Join(cfg.SharingDir, folderId)
+	entries, err := os.ReadDir(folderPath)
+	if err != nil {
+		http.Error(w, "Folder does not exist", http.StatusBadRequest)
+		return
+	}
+
+	var sharingFilesResponse SharingFilesResponse
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			sharingFilesResponse.Files = append(sharingFilesResponse.Files, entry.Name())
+		}
+	}
+	json.NewEncoder(w).Encode(sharingFilesResponse)
 }
