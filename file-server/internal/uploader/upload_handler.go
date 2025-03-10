@@ -2,7 +2,7 @@ package uploader
 
 import (
 	// "bufio"
-	"file-server/internal/job"
+	// "file-server/internal/job"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -82,7 +82,7 @@ func ParseForm(w http.ResponseWriter, r *http.Request) (FileMeta, File, error) {
 	return meta, chunk, nil
 }
 
-func UploadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager, filePath string) {
+func UploadHandler(w http.ResponseWriter, r *http.Request, filePath string) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return

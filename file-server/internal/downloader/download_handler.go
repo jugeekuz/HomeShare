@@ -6,17 +6,32 @@ import (
 	"strconv"
 	"net/http"
 	
+	"file-server/config"
 	"file-server/internal/job"
 )
 
 func DownloadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager) {
+	cfg := config.LoadConfig()
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	fileName := r.URL.Query().Get("file")
 	if fileName == "" {
 		http.Error(w, "Missing file parameter", http.StatusBadRequest)
 		return
 	}
 
-	f, err := os.Open("uploads/"+fileName)
+	folderId := r.URL.Query().Get("folder_id")
+	if folderId == "" {
+		http.Error(w, "Missing folder_id parameter", http.StatusBadRequest)
+		return
+	}
+
+	filePath := filepath.Join(cfg.SharingDir, folderId, fileName)
+	f, err := os.Open(filePath)
 	if err != nil {
 		http.Error(w, "File not found", http.StatusNotFound)
 		return
