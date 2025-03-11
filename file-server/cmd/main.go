@@ -2,13 +2,14 @@
 package main
 
 import (
+	"log"
+	"os"
+	"time"
+
 	"file-server/internal/app"
 	"file-server/config"
 	"file-server/internal/helpers"
 	"file-server/internal/job"
-	"log"
-	"os"
-	"time"
 )
 
 func main() {
@@ -25,7 +26,10 @@ func main() {
 	job_timeout := 45 * time.Second
 	jm := job.NewJobManager(job_timeout)
 
-	server := app.SetupServer(jm)
+	server, err := app.SetupServer(jm)
+	if err != nil {
+		log.Fatalf("Server setup failed: %v", err)
+	}
 
 	server.Addr = ":443"
 
