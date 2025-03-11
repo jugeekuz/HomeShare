@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -19,45 +20,22 @@ type TokenParameters struct {
 	UserId         string        `json:"user_id"`
 	ExpiryDuration time.Duration `json:"expiry_duration_hours"`
 	FolderId       string        `json:"folder_id"`
-	Access         string        `json:"access"` // "read", "write", or "read+write"
+	Access         string        `json:"access"` // "r", "w", or "rw"
 }
 
 type TokenResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
-func GenerateTokens(accessParams, refreshParams *TokenParameters) (string, string, error) {
-	accessClaims := jwt.MapClaims{
-		"user_id":   accessParams.UserId,
-		"folder_id": accessParams.FolderId,
-		"access":    accessParams.Access,
-		"exp":       time.Now().Add(accessParams.ExpiryDuration * time.Hour).Unix(),
-	}
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
-	accessTokenString, err := accessToken.SignedString(jwtKey)
-	if err != nil {
-		return "", "", err
-	}
-
-	refreshClaims := jwt.MapClaims{
-		"user_id":   refreshParams.UserId,
-		"folder_id": refreshParams.FolderId,
-		"access":    refreshParams.Access,
-		"exp":       time.Now().Add(refreshParams.ExpiryDuration * time.Hour).Unix(),
-	}
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	refreshTokenString, err := refreshToken.SignedString(jwtKey)
-	if err != nil {
-		return "", "", err
-	}
-
-	return accessTokenString, refreshTokenString, nil
-}
-
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	var creds Credentials
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if _, err := Authenticate(db, creds); err != nil {
+		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
@@ -83,7 +61,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshTokenString,
-		Expires:  time.Now().Add(24 * time.Hour),
+		Expires:  time.Now().Add(24 * time.Hour),//change
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
