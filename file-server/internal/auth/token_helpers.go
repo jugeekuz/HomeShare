@@ -129,6 +129,9 @@ func HasAccess(claims jwt.MapClaims, folderID, requiredAccess string) (bool, err
 	if requiredAccess == "w" && (claimAccess == "w" || claimAccess == "rw") {
 		return true, nil
 	}
+	if requiredAccess == "rw" && claimAccess == "rw" {
+		return true, nil
+	}
 
 	return false, nil
 }
