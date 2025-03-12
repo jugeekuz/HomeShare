@@ -16,6 +16,7 @@ import (
 	"file-server/internal/uploader"
 
 	"github.com/google/uuid"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type SharingDetails struct {
@@ -40,6 +41,20 @@ func SharingHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Check if user is admin (ie has rw access to root)
+	claimsRaw := r.Context().Value(auth.ClaimsContextKey)
+	claims, ok := claimsRaw.(jwt.MapClaims)
+	if !ok {
+		http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+		return
+	}
+
+	canAccess, err := auth.HasAccess(claims, "/", "rw")
+	if err != nil || !canAccess {
+		http.Error(w, "Forbidden: insufficient permissions", http.StatusForbidden)
 		return
 	}
 
@@ -90,6 +105,20 @@ func AddSharingFilesHandler(w http.ResponseWriter, r *http.Request, jm *job.JobM
         http.Error(w, "Folder-Id header field is required", http.StatusBadRequest)
         return
     }
+	// Check if user has write access to the folder
+	claimsRaw := r.Context().Value(auth.ClaimsContextKey)
+	claims, ok := claimsRaw.(jwt.MapClaims)
+	if !ok {
+		http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+		return
+	}
+
+	canAccess, err := auth.HasAccess(claims, folderId, "w")
+	if err != nil || !canAccess {
+		http.Error(w, "Forbidden: insufficient permissions", http.StatusForbidden)
+		return
+	}
+
 	folderDir := filepath.Join(cfg.SharingDir, folderId)
 
     if _, err := os.Stat(folderDir); err != nil {
@@ -129,6 +158,20 @@ func GetSharingFilesHandler(w http.ResponseWriter, r *http.Request) {
 	folderId := r.URL.Query().Get("folder_id")
 	if folderId == "" {
 		http.Error(w, "Missing folder_id parameter", http.StatusBadRequest)
+		return
+	}
+
+	claimsRaw := r.Context().Value(auth.ClaimsContextKey)
+	claims, ok := claimsRaw.(jwt.MapClaims)
+	if !ok {
+		http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+		return
+	}
+
+	// Check if user has read access to the folder
+	canAccess, err := auth.HasAccess(claims, folderId, "r")
+	if err != nil || !canAccess {
+		http.Error(w, "Forbidden: insufficient permissions", http.StatusForbidden)
 		return
 	}
 

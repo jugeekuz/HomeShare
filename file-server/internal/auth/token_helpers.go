@@ -1,18 +1,21 @@
 package auth
 
-
 import (
-	"fmt"
-	"os"
-	"log"
-	"errors"
-	"time"
 	"database/sql"
+	"errors"
+	"fmt"
+	"log"
+	"os"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	"file-server/config"
 )
 
 func GenerateTokens(accessParams, refreshParams *TokenParameters) (string, string, error) {
+	cfg := config.LoadConfig()
+
 	accessClaims := jwt.MapClaims{
 		"user_id":   accessParams.UserId,
 		"folder_id": accessParams.FolderId,
@@ -20,7 +23,7 @@ func GenerateTokens(accessParams, refreshParams *TokenParameters) (string, strin
 		"exp":       time.Now().Add(accessParams.ExpiryDuration * time.Hour).Unix(),
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
-	accessTokenString, err := accessToken.SignedString(jwtKey)
+	accessTokenString, err := accessToken.SignedString([]byte(cfg.Secrets.JwtSecret))
 	if err != nil {
 		return "", "", err
 	}
@@ -32,7 +35,7 @@ func GenerateTokens(accessParams, refreshParams *TokenParameters) (string, strin
 		"exp":       time.Now().Add(refreshParams.ExpiryDuration * time.Hour).Unix(),
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	refreshTokenString, err := refreshToken.SignedString(jwtKey)
+	refreshTokenString, err := refreshToken.SignedString([]byte(cfg.Secrets.JwtSecret))
 	if err != nil {
 		return "", "", err
 	}
@@ -83,29 +86,49 @@ var (
 	errorLog = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 )
 
-func logAsync(logger *log.Logger, message string) {
+func LogAsync(logger *log.Logger, message string) {
 	go func() {
 		logger.Println(message)
 	}()
 }
 
 func Authenticate(db *sql.DB, creds Credentials) (*User, error) {
-	logAsync(infoLog, "Starting authentication process")
 
 	user, err := getUserByUsername(db, creds.Username)
 	if err != nil {
-		logAsync(errorLog, "Failed to retrieve user: "+err.Error())
 		return nil, err
 	}
 
-	logAsync(infoLog, "User retrieved successfully: "+user.Username)
 
 	hashedPassword := HashPassword(creds.Password, user.Salt)
 	if hashedPassword != user.PasswordHash {
-		logAsync(errorLog, "Invalid credentials for user: "+user.Username)
 		return nil, errors.New("invalid credentials")
 	}
 
-	logAsync(infoLog, "Authentication successful for user: "+user.Username)
 	return user, nil
+}
+
+func HasAccess(claims jwt.MapClaims, folderID, requiredAccess string) (bool, error) {
+	claimFolderID, ok := claims["folder_id"].(string)
+	if !ok {
+		return false, errors.New("folder_id claim missing or invalid")
+	}
+
+	claimAccess, ok := claims["access"].(string)
+	if !ok {
+		return false, errors.New("access claim missing or invalid")
+	}
+
+	if claimFolderID != folderID && claimFolderID != "/" {
+		return false, nil
+	}
+
+	if requiredAccess == "r" && (claimAccess == "r" || claimAccess == "rw") {
+		return true, nil
+	}
+	if requiredAccess == "w" && (claimAccess == "w" || claimAccess == "rw") {
+		return true, nil
+	}
+
+	return false, nil
 }

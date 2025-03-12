@@ -2,7 +2,6 @@ package uploader
 
 import (
 	// "bufio"
-	// "file-server/internal/job"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -11,8 +10,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"file-server/internal/auth"
 
-	"github.com/google/uuid"
+	"github.com/google/uuid"	
+	"github.com/golang-jwt/jwt/v5"
 )
 type FileMeta struct {
 	FileId			string;
@@ -85,6 +86,20 @@ func ParseForm(w http.ResponseWriter, r *http.Request) (FileMeta, File, error) {
 func UploadHandler(w http.ResponseWriter, r *http.Request, filePath string) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Check if user has write access to the folder
+	claimsRaw := r.Context().Value(auth.ClaimsContextKey)
+	claims, ok := claimsRaw.(jwt.MapClaims)
+	if !ok {
+		http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+		return
+	}
+
+	canAccess, err := auth.HasAccess(claims, "/", "w")
+	if err != nil || !canAccess {
+		http.Error(w, "Forbidden: insufficient permissions", http.StatusForbidden)
 		return
 	}
 

@@ -7,7 +7,11 @@ import (
 	"net/http"
 	
 	"file-server/config"
+	"file-server/internal/auth"
 	"file-server/internal/job"
+
+	
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func DownloadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager) {
@@ -27,6 +31,20 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager)
 	folderId := r.URL.Query().Get("folder_id")
 	if folderId == "" {
 		http.Error(w, "Missing folder_id parameter", http.StatusBadRequest)
+		return
+	}
+
+	// Check if user has write access to the folder
+	claimsRaw := r.Context().Value(auth.ClaimsContextKey)
+	claims, ok := claimsRaw.(jwt.MapClaims)
+	if !ok {
+		http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+		return
+	}
+
+	canAccess, err := auth.HasAccess(claims, folderId, "r")
+	if err != nil || !canAccess {
+		http.Error(w, "Forbidden: insufficient permissions", http.StatusForbidden)
 		return
 	}
 
