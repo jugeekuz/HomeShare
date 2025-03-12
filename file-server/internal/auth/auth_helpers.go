@@ -1,12 +1,19 @@
 package auth
 
 import (
-	"fmt"
-	"errors"
+	"context"
+	"strings"
 	"crypto/rand"
-	"database/sql"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
+	"errors"
+	"fmt"
+	"net/http"
+
+	"file-server/config"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 type User struct {
 	Username		string
@@ -16,6 +23,10 @@ type User struct {
 	FolderId		string
 	Access			string // r, w or rw
 }
+
+type contextKey string
+
+const ClaimsContextKey contextKey = "claims"
 
 func HashPassword(password, salt string) string {
 	hash := sha256.Sum256([]byte(password + salt))
@@ -95,3 +106,36 @@ func getUserByUsername(db *sql.DB, username string) (*User, error) {
 	return &user, nil
 }
 
+func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cfg := config.LoadConfig()
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			http.Error(w, "Missing token", http.StatusUnauthorized)
+			return
+		}
+
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+			http.Error(w, "Invalid authorization header", http.StatusUnauthorized)
+			return
+		}
+		tokenStr := parts[1]
+		
+		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(cfg.Secrets.JwtSecret), nil
+		})
+		if err != nil || !token.Valid {
+			LogAsync(infoLog,err.Error())
+			LogAsync(infoLog,tokenStr)
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), ClaimsContextKey, token.Claims)
+		next(w, r.WithContext(ctx))
+	})
+}

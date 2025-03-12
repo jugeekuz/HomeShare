@@ -3,13 +3,12 @@ package auth
 import (
 	"database/sql"
 	"encoding/json"
+	"file-server/config"
 	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
-
-var jwtKey = []byte("my_secret_key")
 
 type Credentials struct {
 	Username string `json:"username"`
@@ -77,7 +76,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 }
 
 func RefreshHandler(w http.ResponseWriter, r *http.Request) {
-
+	cfg := config.LoadConfig()
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
 		http.Error(w, "Unauthorized: No refresh token provided", http.StatusUnauthorized)
@@ -85,7 +84,7 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
+		return []byte(cfg.Secrets.JwtSecret), nil
 	})
 
 	if err != nil || !token.Valid {

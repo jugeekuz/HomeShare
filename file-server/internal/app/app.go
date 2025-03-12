@@ -15,28 +15,6 @@ import (
 	"github.com/rs/cors"
 )
 
-// type ContextKey string
-// const UserClaimsKey ContextKey = "userClaims"
-
-// func AuthMiddleware(next http.Handler) http.Handler {
-//     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//         token := r.Header.Get("Authorization")
-//         if token == "" {
-//             http.Error(w, "Unauthorized", http.StatusUnauthorized)
-//             return
-//         }
-// 		// token decode
-//         userClaims := map[string]string{
-//             "folder1": "read",
-//             "folder2": "write",
-//         }
-
-//         ctx := context.WithValue(r.Context(), UserClaimsKey, userClaims)
-
-//         next.ServeHTTP(w, r.WithContext(ctx))
-//     })
-// }
-
 func SetupServer(jm *job.JobManager) (*http.Server, error) {
 	cfg := config.LoadConfig()
 
@@ -73,25 +51,35 @@ func SetupServer(jm *job.JobManager) (*http.Server, error) {
 	})
 
 	// Authenticated endpoints
-	mux.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
-		uploader.UploadHandler(w, r, cfg.UploadDir)
-	})
+	mux.HandleFunc("/upload", 
+		auth.AuthMiddleware(
+			func(w http.ResponseWriter, r *http.Request) {
+				uploader.UploadHandler(w, r, cfg.UploadDir)
+			}))
 
-	mux.HandleFunc("/download", func(w http.ResponseWriter, r *http.Request) {
-		downloader.DownloadHandler(w, r, jm)
-	})
+	mux.HandleFunc("/download", 
+		auth.AuthMiddleware(
+			func(w http.ResponseWriter, r *http.Request) {
+				downloader.DownloadHandler(w, r, jm)
+			}))
 
-	mux.HandleFunc("/share", func(w http.ResponseWriter, r *http.Request) {
-		sharing.SharingHandler(w, r)
-	})
+	mux.HandleFunc("/share", 
+		auth.AuthMiddleware(
+			func(w http.ResponseWriter, r *http.Request) {
+				sharing.SharingHandler(w, r)
+			}))
 
-	mux.HandleFunc("/share-file", func(w http.ResponseWriter, r *http.Request) {
-		sharing.AddSharingFilesHandler(w, r, jm)
-	})
+	mux.HandleFunc("/share-file", 
+		auth.AuthMiddleware(
+			func(w http.ResponseWriter, r *http.Request) {
+				sharing.AddSharingFilesHandler(w, r, jm)
+			}))
 
-	mux.HandleFunc("/share-files", func(w http.ResponseWriter, r *http.Request) {
-		sharing.GetSharingFilesHandler(w, r)
-	})
+	mux.HandleFunc("/share-files", 
+		auth.AuthMiddleware(
+			func(w http.ResponseWriter, r *http.Request) {
+				sharing.GetSharingFilesHandler(w, r)
+			}))
 
 	return &http.Server{
 		Addr:    ":443",
