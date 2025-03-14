@@ -2,6 +2,7 @@ package app
 
 import (
 	// "context"
+	"database/sql"
 	"file-server/config"
 	"file-server/internal/auth"
 	"file-server/internal/db"
@@ -15,7 +16,9 @@ import (
 	"github.com/rs/cors"
 )
 
-func SetupServer(jm *job.JobManager) (*http.Server, error) {
+type DatabaseCallback func() (*sql.DB, error) 
+
+func InitDatabase() (*sql.DB, error) {
 	cfg := config.LoadConfig()
 
 	db, err := db.StartConn()
@@ -29,9 +32,19 @@ func SetupServer(jm *job.JobManager) (*http.Server, error) {
 	if _, err := auth.CreateAdminUser(db, user.Username, user.Email, user.Password); err != nil {
 		return nil, err
 	}
+	return db, nil
+}
+
+func SetupServer(jm *job.JobManager, dbCallback DatabaseCallback) (*http.Server, error) {
+	cfg := config.LoadConfig()
+
+	db, err := dbCallback()
+	if err != nil {
+		return nil, err
+	}
 
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"https://kuza.gr", "https://kuza.gr/"},
+		AllowedOrigins: []string{cfg.DomainOrigin},
 		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodOptions},
 	})
 

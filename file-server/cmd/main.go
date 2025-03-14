@@ -26,7 +26,7 @@ func main() {
 	job_timeout := 45 * time.Second
 	jm := job.NewJobManager(job_timeout)
 
-	server, err := app.SetupServer(jm)
+	server, err := app.SetupServer(jm, app.InitDatabase)
 	if err != nil {
 		log.Fatalf("Server setup failed: %v", err)
 	}
