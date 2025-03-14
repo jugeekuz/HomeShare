@@ -2,8 +2,9 @@ package config
 
 import (
 	"os"
-
-	"file-server/internal/helpers"
+	"log"
+	"strconv"
+	"time"
 )
 type DBConfig struct {
 	Host     string
@@ -20,10 +21,17 @@ type User struct {
 	Password	string
 }
 
+type JWT struct {
+	JwtSecret				string
+	AccessExpiryDuration	time.Duration	
+	RefreshExpiryDuration	time.Duration	
+}
+
 type Secrets struct {
-	JwtSecret	string	
+	Jwt		JWT
 }
 type Config struct {
+	DomainOrigin	string
 	UploadDir       string
 	SharingDir      string
 	DB 				DBConfig
@@ -32,7 +40,16 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
+	accessTokenExp, err := strconv.Atoi(getEnv("ACCESS_TOKEN_EXP_H", "1"))
+	if err != nil {
+		log.Fatalf("Invalid ACCESS_TOKEN_EXP_H value: %v", err)
+	}
+	refreshTokenExp, err := strconv.Atoi(getEnv("REFRESH_TOKEN_EXP_H", "1"))
+	if err != nil {
+		log.Fatalf("Invalid REFRESH_TOKEN_EXP_H value: %v", err)
+	}
 	return &Config{
+		DomainOrigin:	getEnv("DOMAIN_ORIGIN", "https://example.com"),
 		UploadDir: 		getEnv("UPLOAD_DIR", "uploads"),
 		SharingDir: 	getEnv("SHARING_DIR", "temp"),
 		DB: DBConfig{
@@ -44,13 +61,18 @@ func LoadConfig() *Config {
             SSLMode:  	getEnv("DB_SSL_MODE", "disable"),
         },
 		Secrets: Secrets{
-			JwtSecret: helpers.GetOrCreateJWTSecret("secrets", "JWT"),
+			JWT {
+				JwtSecret: 				GetOrCreateJWTSecret("secrets", "JWT"),
+				AccessExpiryDuration: 	time.Duration(accessTokenExp),
+				RefreshExpiryDuration: 	time.Duration(refreshTokenExp),
+			},
 		},
 		User: User{
 			Username: 	getEnv("ADMIN_USERNAME", "admin"),
 			Password: 	getEnv("ADMIN_PASSWORD", "admin"),
 			Email:	  	getEnv("ADMIN_EMAIL", "admin@email.com"),
 		},
+
 	}
 }
 
