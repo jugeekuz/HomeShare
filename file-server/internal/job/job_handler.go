@@ -24,7 +24,7 @@ func NewJobManager(timeout time.Duration) *JobManager {
 		timeout:   timeout,
 		closeChan: make(chan struct{}),
 	}
-	go jm.cleanupStaleJobs()
+	go jm.cleanupStaleJobs(1 * time.Minute)
 	return jm
 }
 
@@ -56,8 +56,8 @@ func (jm *JobManager) ReleaseJob(jobId string) {
 	}
 }
 
-func (jm *JobManager) cleanupStaleJobs() {
-	ticker := time.NewTicker(1 * time.Minute)
+func (jm *JobManager) cleanupStaleJobs(tckInterval time.Duration) {
+	ticker := time.NewTicker(tckInterval)
 	defer ticker.Stop()
 
 	for {
