@@ -2,8 +2,10 @@ package app
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -41,6 +43,13 @@ func setupTestServer(t *testing.T) (*httptest.Server, string) {
 	return ts, cfg.DomainOrigin
 }
 
+func cleanupTestServer() error {
+	if err := os.RemoveAll("secrets"); err != nil {
+		return fmt.Errorf("Received error while deleting secrets folder %v", err)
+	}
+	return nil
+}
+
 func TestRoutes(t *testing.T) {
 	ts, _ := setupTestServer(t)
 	defer ts.Close()
@@ -65,6 +74,9 @@ func TestRoutes(t *testing.T) {
 				t.Errorf("expected route %s not to return 404", route)
 			}
 		})
+	}
+	if err := cleanupTestServer(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -137,6 +149,10 @@ func TestCors(t *testing.T) {
 			}
 		})
 	}
+
+	if err := cleanupTestServer(); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestHeaders(t *testing.T) {
@@ -161,5 +177,9 @@ func TestHeaders(t *testing.T) {
 			}
 
 		})
+	}
+
+	if err := cleanupTestServer(); err != nil {
+		t.Error(err)
 	}
 }

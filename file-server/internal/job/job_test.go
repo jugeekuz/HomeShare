@@ -1,6 +1,5 @@
 package job
 
-
 import (
 	"sync"
 	"testing"
@@ -79,6 +78,7 @@ func TestJobManager(t *testing.T) {
 		if _, exists := jm.jobs[jobID]; exists {
 			t.Errorf("expected job %s to be cleaned up as stale", jobID)
 		}
+		jm.mapMu.Unlock()
 
 		jm.Close()
 	})
@@ -86,7 +86,7 @@ func TestJobManager(t *testing.T) {
 	t.Run("Test Close Method", func(t *testing.T) {
 		jm := NewJobManager(5 * time.Minute)
 		jobIDs := []string{"job1", "job2", "job3"}
-		
+
 		for _, id := range jobIDs {
 			jm.AcquireJob(id)
 		}
