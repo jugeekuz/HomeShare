@@ -34,6 +34,7 @@ type Config struct {
 	DomainOrigin	string
 	UploadDir       string
 	SharingDir      string
+	ChunksDir 	    string
 	DB 				DBConfig
 	Secrets			Secrets
 	User			User
@@ -49,9 +50,10 @@ func LoadConfig() *Config {
 		log.Fatalf("Invalid REFRESH_TOKEN_EXP_H value: %v", err)
 	}
 	return &Config{
-		DomainOrigin:	getEnv("DOMAIN_ORIGIN", "https://example.com"),
+		DomainOrigin:	getEnv("DOMAIN_ORIGIN", "https://kuza.gr"),
 		UploadDir: 		getEnv("UPLOAD_DIR", "uploads"),
 		SharingDir: 	getEnv("SHARING_DIR", "temp"),
+		ChunksDir: 		getEnv("CHUNKS_DIR", "chunks"),
 		DB: DBConfig{
             Host:     	getEnv("DB_HOST", "postgres"),
             Port:     	getEnv("DB_PORT", "5432"),
