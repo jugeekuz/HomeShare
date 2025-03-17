@@ -1,12 +1,10 @@
 package auth
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
-	"log"
-	"os"
 	"time"
+	"database/sql"
 
 	"github.com/golang-jwt/jwt/v5"
 
@@ -23,7 +21,7 @@ func GenerateTokens(accessParams, refreshParams *TokenParameters) (string, strin
 		"exp":       time.Now().Add(accessParams.ExpiryDuration * time.Hour).Unix(),
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
-	accessTokenString, err := accessToken.SignedString([]byte(cfg.Secrets.JwtSecret))
+	accessTokenString, err := accessToken.SignedString([]byte(cfg.Secrets.Jwt.JwtSecret))
 	if err != nil {
 		return "", "", err
 	}
@@ -35,7 +33,7 @@ func GenerateTokens(accessParams, refreshParams *TokenParameters) (string, strin
 		"exp":       time.Now().Add(refreshParams.ExpiryDuration * time.Hour).Unix(),
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	refreshTokenString, err := refreshToken.SignedString([]byte(cfg.Secrets.JwtSecret))
+	refreshTokenString, err := refreshToken.SignedString([]byte(cfg.Secrets.Jwt.JwtSecret))
 	if err != nil {
 		return "", "", err
 	}
@@ -81,16 +79,6 @@ func DecodeToken(tokenStr string, secret string) (TokenParameters, error) {
 	return params, nil
 }
 
-var (
-	infoLog  = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	errorLog = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-)
-
-func LogAsync(logger *log.Logger, message string) {
-	go func() {
-		logger.Println(message)
-	}()
-}
 
 func Authenticate(db *sql.DB, creds Credentials) (*User, error) {
 
@@ -98,7 +86,6 @@ func Authenticate(db *sql.DB, creds Credentials) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-
 
 	hashedPassword := HashPassword(creds.Password, user.Salt)
 	if hashedPassword != user.PasswordHash {

@@ -1,19 +1,8 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
-import config from '../configs/config'
-import { FileIcon, defaultStyles } from 'react-file-icon';
-import { LuDownload } from "react-icons/lu";
+import config from '../configs/config';
+import { FileDownloadIcon } from "../components/FileIcons";
 
-const FileDownloadIcon : React.FC<{className: string | null, active?: boolean}> = ({className, active = false}) => (
-    <div className={`relative w-12 h-12 ${className}`}>
-        <div className="w-3/4 h-1/4">
-            <FileIcon color='#f0f4f7' extension="" {...defaultStyles}/>
-        </div>
-        <div className={`absolute flex ${active ? "bg-blue-700" : "bg-[#051d41]"} rounded-full w-[50%] h-[50%] right-0 bottom-0 p-[5px] justify-center items-center`}>
-            <LuDownload className='text-gray-50 w-full h-full'/>
-        </div>
-    </div>
-)
 
 const DownloadPage: React.FC = () => {
     const location = useLocation();

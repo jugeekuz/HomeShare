@@ -27,6 +27,8 @@ type TokenResponse struct {
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	cfg := config.LoadConfig()
+
 	var creds Credentials
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
@@ -40,13 +42,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	accessParams := &TokenParameters{
 		UserId:         creds.Username,
-		ExpiryDuration: 1, // Access token expires in 1 hour.
+		ExpiryDuration: cfg.Secrets.Jwt.AccessExpiryDuration,
 		FolderId:       "/",
 		Access:         "rw",
 	}
 	refreshParams := &TokenParameters{
 		UserId:         creds.Username,
-		ExpiryDuration: 24, // Refresh token expires in 24 hours.
+		ExpiryDuration: cfg.Secrets.Jwt.RefreshExpiryDuration,
 		FolderId:       "/",
 		Access:         "rw",
 	}
@@ -60,7 +62,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshTokenString,
-		Expires:  time.Now().Add(24 * time.Hour),//change
+		Expires:  time.Now().Add(cfg.Secrets.Jwt.RefreshExpiryDuration * time.Hour),
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
@@ -84,7 +86,7 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
-		return []byte(cfg.Secrets.JwtSecret), nil
+		return []byte(cfg.Secrets.Jwt.JwtSecret), nil
 	})
 
 	if err != nil || !token.Valid {

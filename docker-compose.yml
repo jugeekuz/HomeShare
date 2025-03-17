@@ -1,4 +1,15 @@
 services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: userdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
   ddns-updater:
     build: 
       context: ./ddns-updater
@@ -21,11 +32,14 @@ services:
     stdin_open: true
     ports:
       - "443:443"
+    depends_on:
+      - postgres
     volumes:
       - ./files:/app/uploads
+      - ./temp:/app/temp
       - ./certs:/app/certs
-      # - ./chunks:/app/chunks
-      # - /app/chunks
+      - ./secrets:/app/secrets
+
   web-interface-dev:
     build:
       context: ./web-interface
@@ -46,5 +60,5 @@ services:
   #     - "8080:80"
 
 
-# volumes:
-#   - app_chunks:
+volumes:
+  pgdata:

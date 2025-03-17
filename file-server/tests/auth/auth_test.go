@@ -9,14 +9,15 @@ import (
 	"testing"
 	"time"
 
+	"file-server/config"
 	"file-server/internal/auth"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtKey = []byte("my_secret_key")
-
 func TestGenerateTokens(t *testing.T) {
+	cfg := config.LoadConfig()
+
 	accessParams := &auth.TokenParameters{
 		UserId:         "testuser",
 		ExpiryDuration: 1, // 1 hour
@@ -40,7 +41,7 @@ func TestGenerateTokens(t *testing.T) {
 
 	// Parse access token to check claims.
 	token, err := jwt.Parse(accessTokenStr, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
+		return []byte(cfg.Secrets.Jwt.JwtSecret), nil
 	})
 	if err != nil || !token.Valid {
 		t.Fatalf("Invalid access token: %v", err)

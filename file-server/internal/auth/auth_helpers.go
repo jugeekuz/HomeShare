@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"strings"
 	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
@@ -10,18 +9,20 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"file-server/config"
 
 	"github.com/golang-jwt/jwt/v5"
 )
+
 type User struct {
-	Username		string
-	Email			string
-	Salt			string
-	PasswordHash	string
-	FolderId		string
-	Access			string // r, w or rw
+	Username     string
+	Email        string
+	Salt         string
+	PasswordHash string
+	FolderId     string
+	Access       string // r, w or rw
 }
 
 type contextKey string
@@ -121,16 +122,14 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		tokenStr := parts[1]
-		
+
 		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
-			return []byte(cfg.Secrets.JwtSecret), nil
+			return []byte(cfg.Secrets.Jwt.JwtSecret), nil
 		})
 		if err != nil || !token.Valid {
-			LogAsync(infoLog,err.Error())
-			LogAsync(infoLog,tokenStr)
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}

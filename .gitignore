@@ -3,3 +3,4 @@ web-interface/package-lock.json
 env
 files/
 chunks/
+certs/*
