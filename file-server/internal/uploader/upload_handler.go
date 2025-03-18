@@ -205,8 +205,7 @@ func ChunkAssemble(meta ChunkMeta, jm *job.JobManager) {
 	log.Printf("Successfully assembled file %s", finalFilePath)
 }
 
-// Uploading in chunks is not necessary in http/2. Keeping this for http1.1
-func UploadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager) {
+func UploadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager, folderPath string) {
 	
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -220,7 +219,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager) {
 		return
 	}
 
-	canAccess, err := auth.HasAccess(claims, "/", "w")
+	canAccess, err := auth.HasAccess(claims, folderPath, "w")
 	if err != nil || !canAccess {
 		http.Error(w, "Forbidden: insufficient permissions", http.StatusForbidden)
 		return
@@ -235,7 +234,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager) {
 	}
 	defer chunk.File.Close()
 
-	chunksDir := filepath.Join(cfg.ChunksDir, meta.FileId)
+	chunksDir := filepath.Join(folderPath, cfg.ChunksDir, meta.FileId)
 	if err := os.MkdirAll(chunksDir, os.ModePerm); err != nil {
 		http.Error(w, "Error creating directory", http.StatusInternalServerError)
 		return

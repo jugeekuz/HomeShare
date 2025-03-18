@@ -2,6 +2,7 @@ package uploader
 
 import (
 	"bytes"
+	"context"
 	"crypto/md5"
     "encoding/hex"
 	"crypto/rand"
@@ -16,9 +17,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/golang-jwt/jwt/v5"
 
 	"file-server/config"
 	"file-server/internal/job"
+	"file-server/internal/auth"
 )
 
 type FormFields struct {
@@ -31,6 +34,9 @@ type FormFields struct {
 	chunkContent 	[]byte
 }
 
+// --------------------------------------
+// 			 Helper Functions
+// --------------------------------------
 func createMultipartForm(formFields FormFields) (*http.Request, error) {
 	var b bytes.Buffer
 	writer := multipart.NewWriter(&b)
@@ -86,6 +92,98 @@ func createMultipartForm(formFields FormFields) (*http.Request, error) {
 	return req, nil
 }
 
+func createRandomChunks(id string, n int) (string, error) {
+	cfg := config.LoadConfig()
+
+	chunksDir := filepath.Join(cfg.ChunksDir, id)
+	if err := os.MkdirAll(chunksDir, os.ModePerm); err != nil {
+		return "", fmt.Errorf("Error while creating chunks directory %v", err)
+	}
+
+	byteSize := 1024*1024*5
+	chunkContent := make([]byte, byteSize)
+
+	hash := md5.New()
+
+	for chunkIndex := 0; chunkIndex < n; chunkIndex++ {
+		if _,err := rand.Read(chunkContent); err != nil {
+			return "", fmt.Errorf("Received unexpected error while creating chunk content: %v", err)
+		}
+	
+		chunkFilePath := filepath.Join(chunksDir, fmt.Sprintf("chunk_%d", chunkIndex))
+		out, err := os.Create(chunkFilePath)
+		if err != nil {
+			return "", fmt.Errorf("Error while creating chunks file %v", err)
+		}
+		defer out.Close()
+		if _, err := out.Write(chunkContent); err != nil {
+			return "", fmt.Errorf("Error writing data to chunk file: %v", err)
+        }
+
+		if _, err := hash.Write(chunkContent); err != nil {
+			return "", fmt.Errorf("error updating md5 hash: %v", err)
+		}
+	}
+
+	finalHash := hex.EncodeToString(hash.Sum(nil))
+	return finalHash, nil
+}
+
+func pathExists(filePath string) bool {
+    _, err := os.Stat(filePath)
+    if err != nil {
+        if os.IsNotExist(err) {
+            return false
+        }
+        fmt.Println("Error checking file:", err)
+        return false
+    }
+    return true
+}
+
+// --------------------------------------
+// 		  Suite Setup - Cleanup
+// --------------------------------------
+func TestMain(m *testing.M) {
+	cfg := config.LoadConfig()
+	if err := os.MkdirAll(cfg.SharingDir, os.ModePerm); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create sharing directory %q: %v\n", cfg.SharingDir, err)
+		os.Exit(1)
+	}
+	if err := os.MkdirAll(cfg.UploadDir, os.ModePerm); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create upload directory %q: %v\n", cfg.UploadDir, err)
+		os.Exit(1)
+	}
+	if err := os.MkdirAll(cfg.ChunksDir, os.ModePerm); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create upload directory %q: %v\n", cfg.ChunksDir, err)
+		os.Exit(1)
+	}
+	if err := os.MkdirAll("secrets", os.ModePerm); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create upload directory %q: %v\n", "secrets", err)
+		os.Exit(1)
+	}
+
+	exitCode := m.Run()
+
+	if err := os.RemoveAll(cfg.SharingDir); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to remove sharing directory %q: %v\n", cfg.SharingDir, err)
+	}
+	if err := os.RemoveAll(cfg.UploadDir); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to remove upload directory %q: %v\n", cfg.UploadDir, err)
+	}
+	if err := os.RemoveAll(cfg.ChunksDir); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to remove sharing directory %q: %v\n", cfg.ChunksDir, err)
+	}
+	if err := os.RemoveAll("secrets"); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to remove upload directory %q: %v\n", "secrets", err)
+	}
+
+	os.Exit(exitCode)
+}
+
+// --------------------------------------
+// 			 Parse Form Tests
+// --------------------------------------
 func TestFormMissingFields(t *testing.T) {
 	tests := []struct {
 		missingField	string
@@ -258,55 +356,9 @@ func TestTooLargeFormPart(t *testing.T) {
 	}
 }
 
-func createRandomChunks(id string, n int) (string, error) {
-	cfg := config.LoadConfig()
-
-	chunksDir := filepath.Join(cfg.ChunksDir, id)
-	if err := os.MkdirAll(chunksDir, os.ModePerm); err != nil {
-		return "", fmt.Errorf("Error while creating chunks directory %v", err)
-	}
-
-	byteSize := 1024*1024*5
-	chunkContent := make([]byte, byteSize)
-
-	hash := md5.New()
-
-	for chunkIndex := 0; chunkIndex < n; chunkIndex++ {
-		if _,err := rand.Read(chunkContent); err != nil {
-			return "", fmt.Errorf("Received unexpected error while creating chunk content: %v", err)
-		}
-	
-		chunkFilePath := filepath.Join(chunksDir, fmt.Sprintf("chunk_%d", chunkIndex))
-		out, err := os.Create(chunkFilePath)
-		if err != nil {
-			return "", fmt.Errorf("Error while creating chunks file %v", err)
-		}
-		defer out.Close()
-		if _, err := out.Write(chunkContent); err != nil {
-			return "", fmt.Errorf("Error writing data to chunk file: %v", err)
-        }
-
-		if _, err := hash.Write(chunkContent); err != nil {
-			return "", fmt.Errorf("error updating md5 hash: %v", err)
-		}
-	}
-
-	finalHash := hex.EncodeToString(hash.Sum(nil))
-	return finalHash, nil
-}
-
-func pathExists(filePath string) bool {
-    _, err := os.Stat(filePath)
-    if err != nil {
-        if os.IsNotExist(err) {
-            return false
-        }
-        fmt.Println("Error checking file:", err)
-        return false
-    }
-    return true
-}
-
+// --------------------------------------
+// 		  Chunk Assembling tests
+// --------------------------------------
 
 func TestChunkAssemble(t *testing.T) {
 	cfg := config.LoadConfig()
@@ -363,40 +415,149 @@ func TestChunkAssemble(t *testing.T) {
 		}
 	})
 }
+// --------------------------------------
+// 		  Authorization Tests
+// --------------------------------------
+func TestUploadHandlerAuth(t *testing.T) {
+	// Create both folders to test
+	folder1 := uuid.New().String()
+	folder2 := uuid.New().String()
+	if err := os.MkdirAll(folder1, os.ModePerm); err != nil {
+		t.Fatalf("Received unexpected error when creating folder: %v", err)
+	}
+	if err := os.MkdirAll(folder2, os.ModePerm); err != nil {
+		t.Fatalf("Received unexpected error when creating folder: %v", err)
+	}
+	form := FormFields{
+		fileId:			uuid.New().String(),
+		fileName:		"someFileName",
+		fileExtension:	".txt",
+		md5Hash:		"6d0bb00954ceb7fbee436bb55a8397a9",
+		chunkIndex:		"0",
+		totalChunks:	"1",
+		chunkContent: 	make([]byte, 100),
+	}
+	expectedBody := "Forbidden: insufficient permissions"
+	t.Run("Upload_Handler_Incorrect_Folder_Auth", func (t *testing.T) {
+		claims := jwt.MapClaims{
+			"user_id":   "someRandomUser",
+			"folder_id": folder1,
+			"access":    "w",
+			"exp":       time.Now().Add(5 * time.Hour).Unix(),
+		}
+		ctx := context.WithValue(context.Background(), auth.ClaimsContextKey, claims)
 
-func TestMain(m *testing.M) {
-	cfg := config.LoadConfig()
-	if err := os.MkdirAll(cfg.SharingDir, os.ModePerm); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create sharing directory %q: %v\n", cfg.SharingDir, err)
-		os.Exit(1)
+		req, err := createMultipartForm(form)
+		if err != nil {
+			t.Fatalf("Received unexpected error when creating multipart form %v", err)
+		}
+		rr := httptest.NewRecorder()
+		req = req.WithContext(ctx)
+		jm := job.NewJobManager(30 * time.Minute)
+
+		UploadHandler(rr, req, jm, folder2)
+
+		if rr.Code != http.StatusForbidden {
+			t.Errorf("expected status 403 Forbidden; got %d", rr.Code)
+		}
+		if strings.TrimSpace(rr.Body.String()) != expectedBody {
+			t.Errorf("expected response body %q; got %q", expectedBody, strings.TrimSpace(rr.Body.String()))
+		}
+	})
+	t.Run("Upload_Handler_Incorrect_Auth_Access", func (t *testing.T) {
+		claims := jwt.MapClaims{
+			"user_id":   "someRandomUser",
+			"folder_id": folder1,
+			"access":    "r",
+			"exp":       time.Now().Add(5 * time.Hour).Unix(),
+		}
+		ctx := context.WithValue(context.Background(), auth.ClaimsContextKey, claims)
+
+		req, err := createMultipartForm(form)
+		if err != nil {
+			t.Fatalf("Received unexpected error when creating multipart form %v", err)
+		}
+		rr := httptest.NewRecorder()
+		req = req.WithContext(ctx)
+		jm := job.NewJobManager(30 * time.Minute)
+
+		UploadHandler(rr, req, jm, folder1)
+
+		if rr.Code != http.StatusForbidden {
+			t.Errorf("expected status 403 Forbidden; got %d", rr.Code)
+		}
+		if strings.TrimSpace(rr.Body.String()) != expectedBody {
+			t.Errorf("expected response body %q; got %q", expectedBody, strings.TrimSpace(rr.Body.String()))
+		}
+	})
+	t.Run("Successful_Authorization", func (t *testing.T) {
+		claims := jwt.MapClaims{
+			"user_id":   "someRandomUser",
+			"folder_id": folder1,
+			"access":    "w",
+			"exp":       time.Now().Add(5 * time.Hour).Unix(),
+		}
+		ctx := context.WithValue(context.Background(), auth.ClaimsContextKey, claims)
+
+		req, err := createMultipartForm(form)
+		if err != nil {
+			t.Fatalf("Received unexpected error when creating multipart form %v", err)
+		}
+		rr := httptest.NewRecorder()
+		req = req.WithContext(ctx)
+		jm := job.NewJobManager(30 * time.Minute)
+
+		UploadHandler(rr, req, jm, folder1)
+
+		if rr.Code == http.StatusForbidden {
+			t.Errorf("didn't expect status 403 forbidden; got %d", rr.Code)
+		}
+	})
+	if err := os.RemoveAll(folder1); err != nil {
+		t.Fatalf("Received unexpected error when removing folder %s: %v", folder1, err)
 	}
-	if err := os.MkdirAll(cfg.UploadDir, os.ModePerm); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create upload directory %q: %v\n", cfg.UploadDir, err)
-		os.Exit(1)
+	if err := os.RemoveAll(folder2); err != nil {
+		t.Fatalf("Received unexpected error when removing folder %s: %v", folder2, err)
 	}
-	if err := os.MkdirAll(cfg.ChunksDir, os.ModePerm); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create upload directory %q: %v\n", cfg.ChunksDir, err)
-		os.Exit(1)
+}
+
+func TestUploadHandlerSuccess(t *testing.T) {
+	folder := uuid.New().String()
+	if err := os.MkdirAll(folder, os.ModePerm); err != nil {
+		t.Fatalf("Received unexpected error when creating folder: %v", err)
 	}
-	if err := os.MkdirAll("secrets", os.ModePerm); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create upload directory %q: %v\n", "secrets", err)
-		os.Exit(1)
+	claims := jwt.MapClaims{
+		"user_id":   "someRandomUser",
+		"folder_id": folder,
+		"access":    "w",
+		"exp":       time.Now().Add(5 * time.Hour).Unix(),
+	}
+	ctx := context.WithValue(context.Background(), auth.ClaimsContextKey, claims)
+
+	form := FormFields{
+		fileId:			uuid.New().String(),
+		fileName:		"someFileName",
+		fileExtension:	".txt",
+		md5Hash:		"6d0bb00954ceb7fbee436bb55a8397a9",
+		chunkIndex:		"0",
+		totalChunks:	"1",
+		chunkContent: 	make([]byte, 100),
+	}
+	req, err := createMultipartForm(form)
+	if err != nil {
+		t.Fatalf("Received unexpected error when creating multipart form %v", err)
+	}
+	rr := httptest.NewRecorder()
+	req = req.WithContext(ctx)
+	jm := job.NewJobManager(30 * time.Minute)
+
+	UploadHandler(rr, req, jm, folder)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected status 200 OK; got %d", rr.Code)
 	}
 
-	exitCode := m.Run()
-
-	if err := os.RemoveAll(cfg.SharingDir); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to remove sharing directory %q: %v\n", cfg.SharingDir, err)
+	if err := os.RemoveAll(folder); err != nil {
+		t.Fatalf("Received unexpected error when removing folder %s: %v", folder, err)
 	}
-	if err := os.RemoveAll(cfg.UploadDir); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to remove upload directory %q: %v\n", cfg.UploadDir, err)
-	}
-	if err := os.RemoveAll(cfg.ChunksDir); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to remove sharing directory %q: %v\n", cfg.ChunksDir, err)
-	}
-	if err := os.RemoveAll("secrets"); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to remove upload directory %q: %v\n", "secrets", err)
-	}
-
-	os.Exit(exitCode)
 }
