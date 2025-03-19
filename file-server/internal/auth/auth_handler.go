@@ -17,7 +17,7 @@ type Credentials struct {
 
 type TokenParameters struct {
 	UserId         string        `json:"user_id"`
-	ExpiryDuration time.Duration `json:"expiry_duration_hours"`
+	ExpiryDuration time.Duration `json:"exp"`
 	FolderId       string        `json:"folder_id"`
 	Access         string        `json:"access"` // "r", "w", or "rw"
 }

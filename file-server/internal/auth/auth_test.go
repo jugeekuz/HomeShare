@@ -352,7 +352,7 @@ func TestRefreshHandler(t *testing.T) {
 		req.AddCookie(&http.Cookie{
 			Name:     "refresh_token",
 			Value:    refreshToken, // Use the correct variable
-			Expires:  time.Now().Add(cfg.Secrets.Jwt.RefreshExpiryDuration * time.Hour),
+			Expires:  time.Now().Add(cfg.Secrets.Jwt.RefreshExpiryDuration),
 			HttpOnly: true,
 			Secure:   true,
 			SameSite: http.SameSiteStrictMode,
@@ -360,6 +360,10 @@ func TestRefreshHandler(t *testing.T) {
 		})
 
 		RefreshHandler(rr, req)
+
+		if rr.Code != http.StatusOK {
+			t.Errorf("Expected status 200 OK, got: %d", rr.Code)
+		}
 		
 		respData := TokenResponse{}
 		if err := json.Unmarshal(rr.Body.Bytes(), &respData); err != nil {
