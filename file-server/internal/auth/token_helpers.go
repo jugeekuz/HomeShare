@@ -18,7 +18,7 @@ func GenerateTokens(accessParams, refreshParams *TokenParameters) (string, strin
 		"user_id":   accessParams.UserId,
 		"folder_id": accessParams.FolderId,
 		"access":    accessParams.Access,
-		"exp":       time.Now().Add(accessParams.ExpiryDuration * time.Hour).Unix(),
+		"exp":       time.Now().Add(accessParams.ExpiryDuration).Unix(),
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 	accessTokenString, err := accessToken.SignedString([]byte(cfg.Secrets.Jwt.JwtSecret))
@@ -30,7 +30,7 @@ func GenerateTokens(accessParams, refreshParams *TokenParameters) (string, strin
 		"user_id":   refreshParams.UserId,
 		"folder_id": refreshParams.FolderId,
 		"access":    refreshParams.Access,
-		"exp":       time.Now().Add(refreshParams.ExpiryDuration * time.Hour).Unix(),
+		"exp":       time.Now().Add(refreshParams.ExpiryDuration).Unix(),
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 	refreshTokenString, err := refreshToken.SignedString([]byte(cfg.Secrets.Jwt.JwtSecret))
@@ -107,6 +107,7 @@ func HasAccess(claims jwt.MapClaims, folderID, requiredAccess string) (bool, err
 	}
 
 	if claimFolderID != folderID && claimFolderID != "/" {
+		fmt.Printf("folderid : %s\nclaimFolderId: %s\n\n", folderID, claimFolderID)
 		return false, nil
 	}
 
