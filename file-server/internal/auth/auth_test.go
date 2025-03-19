@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"os"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -70,6 +71,47 @@ func validateToken(tokenString string, expectedFolder string, expectedAccess str
 
 	return nil
 }
+
+// --------------------------------------
+// 		  Suite Setup - Cleanup
+// --------------------------------------
+func TestMain(m *testing.M) {
+	cfg := config.LoadConfig()
+	if err := os.MkdirAll(cfg.SharingDir, os.ModePerm); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create sharing directory %q: %v\n", cfg.SharingDir, err)
+		os.Exit(1)
+	}
+	if err := os.MkdirAll(cfg.UploadDir, os.ModePerm); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create upload directory %q: %v\n", cfg.UploadDir, err)
+		os.Exit(1)
+	}
+	if err := os.MkdirAll(cfg.ChunksDir, os.ModePerm); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create upload directory %q: %v\n", cfg.ChunksDir, err)
+		os.Exit(1)
+	}
+	if err := os.MkdirAll("secrets", os.ModePerm); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create upload directory %q: %v\n", "secrets", err)
+		os.Exit(1)
+	}
+
+	exitCode := m.Run()
+
+	if err := os.RemoveAll(cfg.SharingDir); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to remove sharing directory %q: %v\n", cfg.SharingDir, err)
+	}
+	if err := os.RemoveAll(cfg.UploadDir); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to remove upload directory %q: %v\n", cfg.UploadDir, err)
+	}
+	if err := os.RemoveAll(cfg.ChunksDir); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to remove sharing directory %q: %v\n", cfg.ChunksDir, err)
+	}
+	if err := os.RemoveAll("secrets"); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to remove upload directory %q: %v\n", "secrets", err)
+	}
+
+	os.Exit(exitCode)
+}
+
 
 func TestLoginHandler(t *testing.T) {
 	t.Run("Login_Handler_Incorrect_Credentials", func (t *testing.T) {

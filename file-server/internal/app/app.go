@@ -67,7 +67,7 @@ func SetupServer(jm *job.JobManager, dbCallback DatabaseCallback) (*http.Server,
 	mux.HandleFunc("/upload", 
 		auth.AuthMiddleware(
 			func(w http.ResponseWriter, r *http.Request) {
-				uploader.UploadHandler(w, r, cfg.UploadDir)
+				uploader.UploadHandler(w, r, jm, cfg.UploadDir)
 			}))
 
 	mux.HandleFunc("/download", 
