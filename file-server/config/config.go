@@ -3,7 +3,6 @@ package config
 import (
 	"os"
 	"log"
-	"strconv"
 	"time"
 )
 type DBConfig struct {
@@ -41,13 +40,13 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
-	accessTokenExp, err := strconv.Atoi(getEnv("ACCESS_TOKEN_EXP_H", "1"))
+	accessTokenExp, err := time.ParseDuration(getEnv("ACCESS_TOKEN_EXP", "15m"))
 	if err != nil {
-		log.Fatalf("Invalid ACCESS_TOKEN_EXP_H value: %v", err)
+		log.Fatalf("Invalid ACCESS_TOKEN_EXP value: %v", err)
 	}
-	refreshTokenExp, err := strconv.Atoi(getEnv("REFRESH_TOKEN_EXP_H", "1"))
+	refreshTokenExp, err := time.ParseDuration(getEnv("REFRESH_TOKEN_EXP", "720h"))
 	if err != nil {
-		log.Fatalf("Invalid REFRESH_TOKEN_EXP_H value: %v", err)
+		log.Fatalf("Invalid REFRESH_TOKEN_EXP value: %v", err)
 	}
 	return &Config{
 		DomainOrigin:	getEnv("DOMAIN_ORIGIN", "https://kuza.gr"),
@@ -65,8 +64,8 @@ func LoadConfig() *Config {
 		Secrets: Secrets{
 			JWT {
 				JwtSecret: 				GetOrCreateJWTSecret("secrets", "JWT"),
-				AccessExpiryDuration: 	time.Duration(accessTokenExp),
-				RefreshExpiryDuration: 	time.Duration(refreshTokenExp),
+				AccessExpiryDuration: 	accessTokenExp,
+				RefreshExpiryDuration: 	refreshTokenExp,
 			},
 		},
 		User: User{
