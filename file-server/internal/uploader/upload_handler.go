@@ -141,12 +141,12 @@ func ParseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error)
 	return meta, chunk, nil
 }
 
-func ChunkAssemble(meta ChunkMeta, jm *job.JobManager) {
+func ChunkAssemble(meta ChunkMeta, jm *job.JobManager, absolutePath string) {
 	cfg := config.LoadConfig()
 
 	defer jm.ReleaseJob(meta.FileId)
 
-	chunksDir := filepath.Join(cfg.ChunksDir, meta.FileId)
+	chunksDir := filepath.Join(absolutePath, cfg.ChunksDir, meta.FileId)
 	if _, err := os.Stat(chunksDir); os.IsNotExist(err) {
 		log.Printf("Chunk directory %s does not exist for file ID: %s", chunksDir, meta.FileId)
 		return
@@ -158,7 +158,7 @@ func ChunkAssemble(meta ChunkMeta, jm *job.JobManager) {
 		}
 	}()
 
-	finalFilePath := filepath.Join(cfg.UploadDir, meta.FileName+meta.FileExtension)
+	finalFilePath := filepath.Join(absolutePath, meta.FileName+meta.FileExtension)
 
 	finalFilePath = getUniqueFileName(finalFilePath) // If file exists then save as `file (1)`
 
@@ -206,7 +206,6 @@ func ChunkAssemble(meta ChunkMeta, jm *job.JobManager) {
 }
 
 func UploadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager, folderPath string) {
-	
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -219,7 +218,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager, f
 		return
 	}
 
-	canAccess, err := auth.HasAccess(claims, folderPath, "w")
+	canAccess, err := auth.HasAccess(claims, filepath.Base(folderPath), "w")
 	if err != nil || !canAccess {
 		http.Error(w, "Forbidden: insufficient permissions", http.StatusForbidden)
 		return
@@ -262,7 +261,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager, f
 
 	if len(files) == meta.TotalChunks {
 		if (jm.AcquireJob(meta.FileId)) {
-			go ChunkAssemble(meta, jm)
+			go ChunkAssemble(meta, jm, folderPath)
 		}
 	}
 

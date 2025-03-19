@@ -92,10 +92,10 @@ func createMultipartForm(formFields FormFields) (*http.Request, error) {
 	return req, nil
 }
 
-func createRandomChunks(id string, n int) (string, error) {
+func createRandomChunks(id string, n int, path string) (string, error) {
 	cfg := config.LoadConfig()
 
-	chunksDir := filepath.Join(cfg.ChunksDir, id)
+	chunksDir := filepath.Join(path, cfg.ChunksDir, id)
 	if err := os.MkdirAll(chunksDir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("Error while creating chunks directory %v", err)
 	}
@@ -366,7 +366,7 @@ func TestChunkAssemble(t *testing.T) {
 	t.Run("Chunk_Assemble_Invalid_Md5_Hash", func (t *testing.T) {
 		id := uuid.New().String()
 
-		if _, err := createRandomChunks(id, 5); err != nil {
+		if _, err := createRandomChunks(id, 5, cfg.UploadDir); err != nil {
 			t.Error(err)
 		}
 		meta := ChunkMeta{
@@ -378,7 +378,7 @@ func TestChunkAssemble(t *testing.T) {
 			TotalChunks:  	5,
 		}
 		jm := job.NewJobManager(30 * time.Minute)
-		ChunkAssemble(meta, jm)
+		ChunkAssemble(meta, jm, cfg.UploadDir)
 		
 		fileName := meta.FileName + meta.FileExtension
 		finalFilePath := filepath.Join(cfg.UploadDir, fileName)
@@ -389,7 +389,7 @@ func TestChunkAssemble(t *testing.T) {
 
 	t.Run("Chunk_Assemble_Success", func (t *testing.T) {
 		id := uuid.New().String()
-		hash, err := createRandomChunks(id, 5)
+		hash, err := createRandomChunks(id, 5, cfg.UploadDir)
 		if err != nil {
 			t.Error(err)
 		}
@@ -402,7 +402,7 @@ func TestChunkAssemble(t *testing.T) {
 			TotalChunks:  	5,
 		}
 		jm := job.NewJobManager(30 * time.Minute)
-		ChunkAssemble(meta, jm)
+		ChunkAssemble(meta, jm, cfg.UploadDir)
 		
 		fileName := meta.FileName + meta.FileExtension
 		finalFilePath := filepath.Join(cfg.UploadDir, fileName)
@@ -513,6 +513,9 @@ func TestUploadHandlerAuth(t *testing.T) {
 			t.Errorf("didn't expect status 403 forbidden; got %d", rr.Code)
 		}
 	})
+
+	time.Sleep(100 * time.Millisecond)
+
 	if err := os.RemoveAll(folder1); err != nil {
 		t.Fatalf("Received unexpected error when removing folder %s: %v", folder1, err)
 	}
@@ -522,13 +525,14 @@ func TestUploadHandlerAuth(t *testing.T) {
 }
 
 func TestUploadHandlerSuccess(t *testing.T) {
+	cfg := config.LoadConfig()
 	folder := uuid.New().String()
 	if err := os.MkdirAll(folder, os.ModePerm); err != nil {
 		t.Fatalf("Received unexpected error when creating folder: %v", err)
 	}
 	claims := jwt.MapClaims{
 		"user_id":   "someRandomUser",
-		"folder_id": folder,
+		"folder_id": "/",
 		"access":    "w",
 		"exp":       time.Now().Add(5 * time.Hour).Unix(),
 	}
@@ -551,10 +555,18 @@ func TestUploadHandlerSuccess(t *testing.T) {
 	req = req.WithContext(ctx)
 	jm := job.NewJobManager(30 * time.Minute)
 
-	UploadHandler(rr, req, jm, folder)
+	UploadHandler(rr, req, jm, cfg.UploadDir)
 
 	if rr.Code != http.StatusOK {
 		t.Errorf("expected status 200 OK; got %d", rr.Code)
+	}
+
+	
+	time.Sleep(100 * time.Millisecond)
+
+	fullFilePath := filepath.Join(cfg.UploadDir, "someFileName.txt")
+	if !pathExists(fullFilePath) {
+		t.Errorf("Final file wasn't created in: %s ", fullFilePath)
 	}
 
 	if err := os.RemoveAll(folder); err != nil {
