@@ -79,8 +79,8 @@ func SharingHandler(w http.ResponseWriter, r *http.Request) {
 	refreshParams := &auth.TokenParameters{
 		UserId:         uuid.New().String(),
 		ExpiryDuration: expiryDuration,
-		FolderId:       "/",
-		Access:         "r",
+		FolderId:       sharingFolderName,
+		Access:         "rw",
 	}
 	_, refreshToken, err := auth.GenerateTokens(refreshParams, refreshParams)
 	if err != nil {
@@ -112,6 +112,8 @@ func AddSharingFilesHandler(w http.ResponseWriter, r *http.Request, jm *job.JobM
 		http.Error(w, "Invalid token claims", http.StatusUnauthorized)
 		return
 	}
+	
+	fullFolderIdPath := filepath.Join(cfg.SharingDir, folderId)
 
 	canAccess, err := auth.HasAccess(claims, folderId, "w")
 	if err != nil || !canAccess {
@@ -119,9 +121,7 @@ func AddSharingFilesHandler(w http.ResponseWriter, r *http.Request, jm *job.JobM
 		return
 	}
 
-	folderDir := filepath.Join(cfg.SharingDir, folderId)
-
-    if _, err := os.Stat(folderDir); err != nil {
+    if _, err := os.Stat(fullFolderIdPath); err != nil {
         if os.IsNotExist(err) {
             http.Error(w, "Folder not found", http.StatusNotFound)
             return
@@ -130,10 +130,9 @@ func AddSharingFilesHandler(w http.ResponseWriter, r *http.Request, jm *job.JobM
         return
     }
 
-	uploader.UploadHandler(w, r, folderDir)
+	uploader.UploadHandler(w, r, jm, fullFolderIdPath)
 
-
-	entries, err := os.ReadDir(folderDir)
+	entries, err := os.ReadDir(fullFolderIdPath)
 	if err != nil {
 		http.Error(w, "Error while reading directory", http.StatusInternalServerError)
 		return
@@ -144,7 +143,7 @@ func AddSharingFilesHandler(w http.ResponseWriter, r *http.Request, jm *job.JobM
 	}
 
 	zipFileName := fmt.Sprintf("%s.zip", folderId)
-	go helpers.CreateZip(folderDir, zipFileName, files, jm)
+	go helpers.CreateZip(fullFolderIdPath, zipFileName, files, jm)
 }
 
 func GetSharingFilesHandler(w http.ResponseWriter, r *http.Request) {
