@@ -107,7 +107,6 @@ func HasAccess(claims jwt.MapClaims, folderID, requiredAccess string) (bool, err
 	}
 
 	if claimFolderID != folderID && claimFolderID != "/" {
-		fmt.Printf("folderid : %s\nclaimFolderId: %s\n\n", folderID, claimFolderID)
 		return false, nil
 	}
 
