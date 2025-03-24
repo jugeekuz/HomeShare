@@ -1,60 +1,40 @@
-import React from "react";
-import { Divider, Button } from "@heroui/react";
+import React, {useState} from "react";
+import { Tabs, Tab, Card, CardBody } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
-import { FileUploadIcon } from "../components/FileIcons";
-const HomePage: React.FC = () => {
-    const navigate = useNavigate();
-    return (
-        <div className="flex h-full w-full justify-center items-center px-1">
-            <div className="flex flex-col justify-center items-center w-[25rem] xl:w-[28rem] bg-white rounded-xl shadow-lg -mt-20">
-                <div className="flex flex-col items-center justify-center w-full h-64">
-                    <div className="flex flex-col items-center justify-center w-full h-full">
-                        <div className="flex flex-row w-full h-full p-2">
-                            <div className="flex flex-col h-full w-1/2 items-center justify-center">
-                            {/* Left Container */}
-                                {/* <div className="p-2">
-                                    <span className="font-linik text-gray-800 text-xs mt-2">
-                                        Upload Files Directly
-                                    </span>
-                                </div> */}
-                                <FileUploadIcon className=""/>
-                                <div className="p-2">
-                                    <span className="font-linik text-gray-800 text-xs mt-2">
-                                        Upload Files Directly
-                                    </span>
-                                </div>
-                                <Button
-                                    color="primary"
-                                    className="text-sm w-3/4"//Change font
-                                    size="md"
-                                    radius="sm"
-                                    onPress={() => navigate('/upload')}>
-                                    Upload Files
-                                </Button>
-                            </div>
-                            <div className="relative flex justify-center items-center h-full">
-                                <div className="absolute flex flex-col justify-between items-center h-full">
-                                    <Divider orientation="vertical" className="h-2/5"/>
-                                    <span className="font-linik text-gray-400 text-xs ">OR</span>
-                                    <Divider orientation="vertical" className="h-2/5"/>
-                                </div>
-                            </div>
-                            <div className="flex flex-col h-full w-1/2 items-center justify-center">
-                                {/* Right Container */}
+import UploadComponent from "../components/UploadComponent";
+type Key = string | number;
 
-                                <Button
-                                    color="primary"
-                                    className="text-sm w-3/4"//Change font
-                                    size="md"
-                                    radius="sm"
-                                    onPress={() => navigate('/sharing')}>
-                                        Share Files
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+const HomePage: React.FC = () => {
+    const [selectedTab, setSelectedTab] = useState<Key>("upload")
+    return (
+        <div className="flex w-full h-full justify-center items-center">
+            {/* Rectangle */}
+            <Card className="max-w-full w-[400px]  bg-white">
+                <CardBody className="justify-center items-center">
+                    <Tabs
+                        fullWidth
+                        selectedKey={selectedTab}
+                        size="sm"
+                        aria-label="Tabs colors" 
+                        radius="sm" 
+                        variant="solid"
+                        onSelectionChange={(key) => setSelectedTab(key)}
+                        className="p-2"
+                        classNames={{
+                            base: "bg-white", 
+                            tabList: "border border-gray-200 bg-white p-1 w-4/5 h-9 mx-auto -mb-1 ",
+                            tab: "px-4 py-2 text-gray-500 font-normal cursor-pointer transition-all hover:bg-gray-100 data-[selected]:shadow-[0_4px_16px_0_rgba(0,0,0,0.12)] data-[selected]:font-medium data-[selected]:text-gray-800 text-[13px] h-[28px]"
+                          }}
+                    >
+                        <Tab key="upload" title="Upload" className="w-full">
+                            <UploadComponent/>
+                        </Tab>
+                        <Tab key="share" title="Share">
+
+                        </Tab>
+                    </Tabs>
+                </CardBody>
+            </Card>
         </div>
     );
 };
