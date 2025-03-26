@@ -7,10 +7,21 @@ export default {
     ],
     theme: {
         extend: {
-        fontFamily: {
-            signatra: ['Signatra', 'cursive'],
-            linik: ["LinikSans", "sans-serif"],
-        },
+            fontFamily: {
+                signatra: ['Signatra', 'cursive'],
+                linik: ["LinikSans", "sans-serif"],
+                roboto: ["Roboto", "sans-serif"],
+            },
+            colors: {
+                wprimary: '#fcfbfc',
+                wsecondary: '#ffffff',
+                contrast: '#f3f5f7',
+            },       
+            backgroundImage: {
+                'primary-gradient': 'linear-gradient(to top right, #3b82f6, #1d4ed8)',
+                'secondary-gradient': 'linear-gradient(to right, #3b82f6, #9333ea)'
+            },
+            
         },
     },
     plugins: [
