@@ -19,11 +19,11 @@ const FileUploader : React.FC = () => {
             value={progress}
             />
         )} */}
-        <div className="w-full px-2 mb-2">
+        <div className="w-full px-2">
             <Button
                 color="primary"
                 isDisabled={!files || Object.keys(files).length === 0 || !filesReady}
-                className="text-md w-full"
+                className="text-md w-full bg-primary-gradient"
                 size="md"
                 radius="sm"
                 onPress={uploadFiles}

@@ -19,16 +19,16 @@ const FileLoader : React.FC = () => {
         <div className="flex flex-col items-center justify-center w-full h-full">
             <div className="w-full h-full p-2">
                 <div 
-                    className="flex flex-col w-full h-full justify-center items-center rounded-lg border-dashed border-2 border-gray-300 p-10 cursor-pointer"
+                    className="flex flex-col w-full h-full justify-center items-center rounded-lg border-dashed border-2 border-gray-300 p-10 cursor-pointer bg-wsecondary"
                     onClick={() =>  fileInputRef.current?.click()}
                     >
                     <FileUploadIcon className="w-12 h-12"/>
 
                     <span className="font-linik  text-gray-800 text-sm mt-2">
-                        Drag & Drop or <span className="text-blue-500">Choose files</span> to upload
+                        Drag & Drop or <span className="bg-secondary-gradient bg-clip-text text-transparent font-medium">Choose files</span> to upload
                     </span>
                     <span className="font-linik  text-gray-400 text-xs ">
-                        Maximum supported file size 4MB
+                        Maximum supported file size 2GB
                     </span>
                 </div>
             </div>

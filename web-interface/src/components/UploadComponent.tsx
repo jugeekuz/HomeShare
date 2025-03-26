@@ -8,11 +8,11 @@ const UploadComponent: React.FC = () => {
   return (
     <div className="flex flex-col w-full h-full">
         <FileProvider>
-            <div className="flex flex-col items-center justify-center w-full h-64">
+            <div className="flex flex-col items-center justify-center w-full h-[14rem]">
                 <FileLoader />
             </div>
             <FileList />
-            <div className="flex flex-col justify-center items-center w-full">
+            <div className="flex flex-col justify-center items-center w-full mt-1">
                 <FileUploader />
             </div>
         </FileProvider>

@@ -79,7 +79,7 @@ const UploadItem : React.FC<{fileId: string}> = ({ fileId }) => {
     }, [file, fileMd5])
 
     return (
-        <FileIcon color='#fcba03' extension={fileStyle.fileExtension} {...fileStyle.fileStyle}  />
+        <FileIcon color='#728eab' extension={fileStyle.fileExtension} {...fileStyle.fileStyle}  />
     )
 }
 

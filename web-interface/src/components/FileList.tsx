@@ -7,6 +7,8 @@ import ProgressBar from './ProgressBar.tsx'
 import { useFileContext } from '../contexts/FileContext.tsx';
 import UploadItem from './UploadItem.tsx';
 import { LuTrash2 } from "react-icons/lu";
+import { HiXMark } from "react-icons/hi2";
+
 
 const FileBox : React.FC<{fileId: string, refCallback: (el: ProgressBarRef | null, fileId: string) => void}> = ({fileId, refCallback}) => {
     const { files, deleteFile } = useFileContext();
@@ -27,37 +29,33 @@ const FileBox : React.FC<{fileId: string, refCallback: (el: ProgressBarRef | nul
     }
 
     return (
-    <div className="flex flex-col justify-center items-center w-full h-[4.5rem] rounded-md bg-gray-100 px-2 mb-1 border-1 border-gray-200" key={fileId}>
+    <div className="flex flex-col justify-center items-center w-full h-[4.5rem] rounded-lg bg-contrast px-2 mb-1 border-1 border-gray-200" key={fileId}>
         <div className="relative flex flex-row justify-start items-center w-full p-2">
-            <div className="w-8 h-8">
+            <div className="flex justify-center items-center w-7 h-7">
                 <UploadItem fileId={fileId}/>
             </div>
-            <div className="flex flex-col w-full px-3">
-                <span className="font-linik text-sm text-gray-700 font-bold">
-                    {files && files[fileId].fileMeta.fileName}
+            <div className="flex flex-col w-full px-3 justify-center">
+                <span className="font-linik text-[13px] text-gray-700 font-bold">
+                    {files && files[fileId].fileMeta.fileName}{files && files[fileId].fileMeta.fileExtension}
                 </span>
                 <div className="flex flex-row justify-start items-center">
                     <span className="text-xs text-gray-600">
                         {files && convertBytes(files[fileId].file.size)}
                     </span>
-                    <span className="text-xs text-gray-500 mx-[0.32rem]">•</span>
-                    <span className=" text-xs text-gray-600">
-                        {files && files[fileId].fileMeta.fileExtension}
-                    </span>
                 </div>
             </div>
             <div 
-                className="absolute flex justify-center items-center rounded-full bg-white w-8 h-8 top-2 right-0 border border-gray-200 cursor-pointer"
+                className="absolute flex justify-center items-center rounded-full w-7 h-7 top-0 right-0  cursor-pointer"
                 onClick={() => deleteFile(fileId)}
                 >
-                <LuTrash2 className='text-gray-600'/>
+                <HiXMark className='text-gray-600'/>
             </div>
         </div>
         <div className="flex justify-center items-center w-full">
             <ProgressBar 
                 size='sm'
                 ref={(el) => refCallback(el, fileId)} 
-                className='max-w-[80%]'/>
+                className='max-w-[90%]'/>
         </div>
     </div>)
 }
@@ -69,7 +67,7 @@ const FileList : React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col items-center justify-center w-full gap-2 px-2 max-h-[12rem]">
+        <div className="flex flex-col items-center justify-center w-full gap-2 px-2 max-h-[9.7rem]">
             {files && Object.keys(files).length > 0 && (
                 <PerfectScrollbar
                     className="w-full h-full"
@@ -79,7 +77,7 @@ const FileList : React.FC = () => {
                         minScrollbarLength: 30,
                     }}
                 >
-                    <div className="flex flex-col items-start w-full">
+                    <div className="flex flex-col items-start w-full gap-[2px]">
                         {Object.entries(files).map(([fileId, _], index) => (
                             <FileBox
                                 key={fileId}
