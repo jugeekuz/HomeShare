@@ -13,7 +13,7 @@ const HomePage: React.FC = () => {
     return (
         <div className="flex w-full h-full justify-center items-center">
             {/* Rectangle */}
-            <Card className="max-w-full w-[400px]  bg-wprimary">
+            <Card className="max-w-full w-[440px]  bg-wprimary">
                 <CardBody className="justify-center items-center">
                     <Tabs
                         fullWidth
@@ -23,20 +23,22 @@ const HomePage: React.FC = () => {
                         radius="sm" 
                         variant="solid"
                         onSelectionChange={(key) => setSelectedTab(key)}
-                        className="p-2"
+                        className=""
                         classNames={{
                             base: "bg-wprimary", 
-                            tabList: "border border-gray-200 bg-wsecondary p-1 w-[70%] h-9 mx-auto -mb-4 mt-1",
+                            tabList: "border border-gray-200 bg-wsecondary p-1 w-[70%] h-9 mx-auto mt-1",
                             tab: "px-4 py-2 text-gray-500 font-normal cursor-pointer transition-all hover:bg-gray-100 data-[selected]:shadow-[0_4px_16px_0_rgba(0,0,0,0.12)] data-[selected]:font-medium data-[selected]:text-gray-800 text-[13px] h-[28px]"
                           }}
                     >
                         <Tab key="upload" title={
-                            <div className="flex items-center ">
-                                <LuUpload size={16} className='mr-2'/>
+                            <div className="flex flex-row justify-center items-center ">
+                                <LuUpload size={15} className='mr-2'/>
                                 <span className="">Upload</span>
                             </div>
-                        } className="w-full px-2">
-                            <UploadComponent/>
+                        } className="w-full">
+                            <div className="-my-1 -mb-2">
+                                <UploadComponent/>
+                            </div>
                         </Tab>
                         <Tab key="share" title={
                             <div className="flex items-center ">

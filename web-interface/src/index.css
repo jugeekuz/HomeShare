@@ -11,29 +11,109 @@
 }
 
 @font-face {
+    font-family: 'Coolvetica';
+    src: url('assets/fonts/Coolvetica Rg.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Eina';
+    src: url('assets/fonts/Eina01-Bold.otf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Eina';
+    src: url('assets/fonts/Eina01-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'BRSonoma';
+    src: url('assets/fonts/BRSonoma-Light.otf') format('opentype');
+    font-weight: light;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'BRSonoma';
+    src: url('assets/fonts/BRSonoma-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'BRSonoma';
+    src: url('assets/fonts/BRSonoma-Medium.otf') format('opentype');
+    font-weight: medium;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'BRSonoma';
+    src: url('assets/fonts/BRSonoma-SemiBold.otf') format('opentype');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'BRSonoma';
+    src: url('assets/fonts/BRSonoma-Bold.otf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
     font-family: 'LinikSans';
     src: url('/assets/fonts/LinikSans-Regular.ttf') format('truetype');
-    font-weight: 400;
+    font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'LinikSans';
     src: url('/assets/fonts/LinikSans-Light.ttf') format('truetype');
-    font-weight: 300;
+    font-weight: light;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'LinikSans';
     src: url('/assets/fonts/LinikSans-Medium.ttf') format('truetype');
-    font-weight: 500;
+    font-weight: medium;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'LinikSans';
     src: url('/assets/fonts/LinikSans-Bold.ttf') format('truetype');
-    font-weight: 700;
+    font-weight: bold;
     font-style: normal;
 }
+
+
+@keyframes stripes {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 40px 0;
+    }
+  }
+  
+  .animate-stripes {
+    background-image: linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.3) 25%,
+      transparent 25%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0.3) 75%,
+      transparent 75%,
+      transparent
+    );
+    background-size: 40px 40px;
+    animation: stripes 2.5s linear infinite;
+  }
+  
