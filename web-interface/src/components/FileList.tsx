@@ -8,6 +8,7 @@ import { useFileContext } from '../contexts/FileContext.tsx';
 import UploadItem from './UploadItem.tsx';
 import { LuTrash2 } from "react-icons/lu";
 import { HiXMark } from "react-icons/hi2";
+import { IoMdDownload } from "react-icons/io";
 
 
 const FileBox : React.FC<{fileId: string, refCallback: (el: ProgressBarRef | null, fileId: string) => void}> = ({fileId, refCallback}) => {
@@ -45,10 +46,16 @@ const FileBox : React.FC<{fileId: string, refCallback: (el: ProgressBarRef | nul
                 </div>
             </div>
             <div 
-                className="absolute flex justify-center items-center rounded-full w-7 h-7 top-0 right-0  cursor-pointer"
+                className="absolute flex justify-center items-center rounded-full w-5 h-5 top-0 right-0 -mr-1  cursor-pointer"
                 onClick={() => deleteFile(fileId)}
                 >
                 <HiXMark className='text-gray-600'/>
+            </div>
+            <div className="absolute flex justify-center items-center rounded-full border bg-wsecondary w-8 h-8 right-3 bottom-[0.3rem] cursor-pointer">
+                <IoMdDownload
+                    size={15}
+                    className='text-primary'
+                />
             </div>
         </div>
         <div className="flex justify-center items-center w-full">
@@ -67,7 +74,7 @@ const FileList : React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col items-center justify-center w-full gap-2 px-2 max-h-[9.7rem]">
+        <div className="flex flex-col items-center justify-center w-full gap-2 max-h-[9.7rem]">
             {files && Object.keys(files).length > 0 && (
                 <PerfectScrollbar
                     className="w-full h-full"
