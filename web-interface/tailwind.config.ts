@@ -3,14 +3,17 @@ import {heroui} from '@heroui/theme'
 export default {
     content: [
         "./src/**/*.{js,jsx,ts,tsx}",
-        "./node_modules/@heroui/theme/dist/components/(button|divider|progress|ripple|spinner).js"
+        "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
     ],
     theme: {
         extend: {
             fontFamily: {
                 signatra: ['Signatra', 'cursive'],
+                eina: ['Eina', 'sans-serif'],
                 linik: ["LinikSans", "sans-serif"],
-                roboto: ["Roboto", "sans-serif"],
+                roboto: ['Roboto', 'sans-serif'],
+                coolvetica: ['Coolvetica', 'sans-serif'],
+                brsonoma: ['BRSonoma', 'sans-serif'],
             },
             colors: {
                 wprimary: '#fcfbfc',
