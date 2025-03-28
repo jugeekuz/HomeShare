@@ -1,8 +1,11 @@
 import React from "react"
 import NavBar from "./components/NavBar.tsx"
 import AppRoutes from "./AppRoutes.tsx"
+import {HeroUIProvider} from "@heroui/react";
+
 const App : React.FC = () => {
 	return (
+        <HeroUIProvider>
 		<div
 			className="relative items-center w-[100dvw] h-[100dvh] "
 			style={{
@@ -25,6 +28,7 @@ const App : React.FC = () => {
                     <AppRoutes/>
 			</div>
 		</div>
+        </HeroUIProvider>
 	)
 }
 export default App
