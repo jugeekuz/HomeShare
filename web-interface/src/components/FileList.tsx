@@ -74,26 +74,32 @@ const FileList : React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col items-center justify-center w-full gap-2 max-h-[9.7rem]">
+        <div className="flex flex-col items-center justify-center w-full gap-2 max-h-[10.5rem]">
             {files && Object.keys(files).length > 0 && (
-                <PerfectScrollbar
-                    className="w-full h-full"
-                    options={{
-                        wheelSpeed: 1,
-                        suppressScrollX: true,
-                        minScrollbarLength: 30,
-                    }}
+                <ScrollShadow 
+                    className='w-full h-full'
+                    visibility='bottom'
+                    size={12}
                 >
-                    <div className="flex flex-col items-start w-full gap-[2px]">
-                        {Object.entries(files).map(([fileId, _], index) => (
-                            <FileBox
-                                key={fileId}
-                                fileId={fileId}
-                                refCallback={refCallback}
-                            />
-                        ))}
-                    </div>
-                </PerfectScrollbar>
+                    <PerfectScrollbar
+                        className="w-full h-full"
+                        options={{
+                            wheelSpeed: 1,
+                            suppressScrollX: true,
+                            minScrollbarLength: 30,
+                        }}
+                    >   
+                            <div className="flex flex-col items-start w-full gap-[2px]">
+                                {Object.entries(files).map(([fileId, _], index) => (
+                                    <FileBox
+                                        key={fileId}
+                                        fileId={fileId}
+                                        refCallback={refCallback}
+                                    />
+                                ))}
+                            </div>
+                    </PerfectScrollbar>
+                </ScrollShadow>
             )}
         </div>
     );
