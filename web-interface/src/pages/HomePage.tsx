@@ -13,7 +13,7 @@ const HomePage: React.FC = () => {
     return (
         <div className="flex w-full h-full justify-center items-center">
             {/* Rectangle */}
-            <Card className="max-w-full w-[440px]  bg-wprimary">
+            <Card className="max-w-full w-[440px]  bg-wprimary -mt-10">
                 <CardBody className="justify-center items-center">
                     <Tabs
                         fullWidth

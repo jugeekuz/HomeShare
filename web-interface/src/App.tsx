@@ -9,7 +9,7 @@ const App : React.FC = () => {
 		<div
 			className="relative items-center w-[100dvw] h-[100dvh] "
 			style={{
-					backgroundImage: "url('src/assets/img/files-abstract.jpg')",
+					backgroundImage: "url('src/assets/img/abstract-bg.png')",
 					backgroundSize: "cover",
 					backgroundPosition: "center",
 					backgroundRepeat: "no-repeat"
