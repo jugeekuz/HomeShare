@@ -41,6 +41,16 @@ const SharingPage: React.FC = () => {
                             </div>
                         } className="w-full">
                             <div className="-my-1 -mb-2">
+                            <div className="flex flex-col justify-start items-center mt-1">
+                                <div className="flex justify-center items-center">
+                                    <span className="font-brsonoma font-normal text-gray-950 text-md mr-1">
+                                        Sharing Folder <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">Vytina</span>
+                                    </span>
+                                </div>
+                                <span className="font-brsonoma font-light text-gray-500 text-xs">
+                                    Explore what others shared or upload your files
+                                </span>
+                            </div>
                                 <DownloadComponent/>
                             </div>
                         </Tab>
@@ -51,6 +61,16 @@ const SharingPage: React.FC = () => {
                             </div>
                         } className="w-full">
                             <div className="-my-1 -mb-2">
+                                <div className="flex flex-col justify-start items-center mt-1">
+                                    <div className="flex flex-col justify-center items-center mt-1 mb-1">
+                                        <span className="font-brsonoma font-normal text-gray-950 text-md mr-1">
+                                             Sharing Folder <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">Vytina</span>
+                                        </span>
+                                        <span className="font-brsonoma font-light text-gray-500 text-xs">
+                                            Explore what others shared or upload your files
+                                        </span>
+                                    </div>
+                                </div>
                                 <UploadComponent/>
                             </div>
                         </Tab>

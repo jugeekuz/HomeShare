@@ -37,6 +37,14 @@ const HomePage: React.FC = () => {
                             </div>
                         } className="w-full">
                             <div className="-my-1 -mb-2">
+                                    <div className="flex flex-col justify-center items-center mt-1 mb-1">
+                                        <span className="font-brsonoma font-normal text-gray-950 text-md mr-1">
+                                            Upload to <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">Admin's</span> Folder
+                                        </span>
+                                        <span className="font-brsonoma font-light text-gray-500 text-xs">
+                                            Send files to your computer or invite friends
+                                        </span>
+                                    </div>
                                 <UploadComponent/>
                             </div>
                         </Tab>
