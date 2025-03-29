@@ -25,7 +25,7 @@ const LoginPage = () => {
                             </span>
                         </div>
 
-                        <div className="flex w-4/5">
+                        <div className="flex w-[85%] mt-3 mb-1">
 
                             <form onSubmit={handleSubmit} className="flex-col w-full">
                                 <Input

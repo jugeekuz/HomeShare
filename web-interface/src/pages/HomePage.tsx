@@ -1,10 +1,11 @@
 import React, {useState} from "react";
-import { Tabs, Tab, Card, CardBody } from "@heroui/react";
+import { Tabs, Tab, Card, CardBody, Tooltip } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import UploadComponent from "../components/UploadComponent";
 import ShareComponent from "../components/ShareComponent";
 import { FaLink } from "react-icons/fa6";
 import { LuUpload } from "react-icons/lu";
+import { IoMdInformationCircle } from "react-icons/io"
 
 type Key = string | number;
 
@@ -38,9 +39,14 @@ const HomePage: React.FC = () => {
                         } className="w-full">
                             <div className="-my-1 -mb-2">
                                     <div className="flex flex-col justify-center items-center mt-1 mb-1">
-                                        <span className="font-brsonoma font-normal text-gray-950 text-md mr-1">
-                                            Upload to <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">Admin's</span> Folder
-                                        </span>
+                                        <div className="flex flex-row justify-center items-center">
+                                            <span className="font-brsonoma font-normal text-gray-950 text-md mr-1">
+                                                Upload to <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">Admin's</span> Folder
+                                            </span>
+                                            <Tooltip  placement="bottom" content="Uploads here will appear in your computer's folder you configured during installation">
+                                                <IoMdInformationCircle className='mb-1'/>
+                                            </Tooltip>
+                                        </div>
                                         <span className="font-brsonoma font-light text-gray-500 text-xs">
                                             Send files to your computer or invite friends
                                         </span>
