@@ -1,14 +1,13 @@
 import React, {useState} from 'react'
 
 import { Card, CardBody, Input, Button, Spinner } from "@heroui/react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from '../contexts/AuthContext';
 import { authenticate } from "../services/authenticate";
 import { useNotificationContext } from '../contexts/NotificationContext';
 const LoginPage = () => {
-    const navigate = useNavigate();
     const { notifyError } = useNotificationContext();
-    const { token, setToken, isAuthenticated } = useAuth();
+    const { setToken, isAuthenticated } = useAuth();
     const [email, setEmail] = useState('');
     const [loginLoading, setLoginLoading] = useState(false);
     const [password, setPassword] = useState('');
@@ -52,45 +51,48 @@ const LoginPage = () => {
                                 </div>
             
                                 <div className="flex w-[85%] mt-3 mb-1">
-            
                                     <form onSubmit={handleSubmit} className="flex-col w-full">
                                         <Input
-                                        isRequired
-                                        onChange={((e) => setEmail(e.target.value))}
-                                        type="email"
-                                        label="Email"
-                                        placeholder="Enter your email"
-                                        variant="bordered"
-                                        className="border-1 rounded-t-xl remove-child-border hover:border-gray-400 focus-within:border-gray-400"
-                                        autoComplete="email"
+                                            isRequired
+                                            onChange={((e) => setEmail(e.target.value))}
+                                            type="email"
+                                            label="Email"
+                                            placeholder="Enter your email"
+                                            variant="bordered"
+                                            classNames={{
+                                                inputWrapper: "rounded-t-xl rounded-b-none border border-gray-200 group-data-[focus=true]:border-gray-400"
+                                            }}
+                                            autoComplete="email"
                                         />
                                         
                                         <Input
-                                        isRequired
-                                        onChange={((e) => setPassword(e.target.value))}
-                                        type={isVisible ? "text" : "password"}
-                                        label="Password"
-                                        placeholder="Enter your password"
-                                        variant="bordered"
-                                        className="border-1 border-t-0 rounded-b-xl remove-child-border hover:border-gray-400 hover:border-t-1 focus-within:border-t-1 focus-within:border-gray-400"
-                                        endContent={
-                                            <button className="focus:outline-none" type="button" onClick={() => setIsVisible(!isVisible)} aria-label="toggle password visibility">
-                                            {isVisible ? (
-                                                <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                                            ) : (
-                                                <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                                            )}
-                                            </button>
-                                        }
-                                        autoComplete="password"
+                                            isRequired
+                                            onChange={((e) => setPassword(e.target.value))}
+                                            type={isVisible ? "text" : "password"}
+                                            label="Password"
+                                            placeholder="Enter your password"
+                                            variant="bordered"
+                                            classNames={{
+                                                inputWrapper: "rounded-b-xl rounded-t-none border border-gray-200 group-data-[focus=true]:border-gray-400"
+                                            }}
+                                            endContent={
+                                                <button className="focus:outline-none" type="button" onClick={() => setIsVisible(!isVisible)} aria-label="toggle password visibility">
+                                                {isVisible ? (
+                                                    <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                                                ) : (
+                                                    <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                                                )}
+                                                </button>
+                                            }
+                                            autoComplete="password"
                                         />
                                         
                                         <Button
-                                        type="submit"
-                                        className="w-full mt-6 bg-primary-gradient"
-                                        color="primary"
+                                            type="submit"
+                                            className="w-full mt-6 bg-primary-gradient"
+                                            color="primary"
                                         >
-                                        {loginLoading ? <Spinner/> : "Log In"}
+                                            {loginLoading ? <Spinner/> : "Log In"}
                                         </Button>
                                     </form>
                                 </div>
