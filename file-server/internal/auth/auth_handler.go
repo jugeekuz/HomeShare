@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"database/sql"
 	"encoding/json"
 	"file-server/config"
@@ -36,7 +37,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 
 	if _, err := Authenticate(db, creds); err != nil {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		http.Error(w, fmt.Sprintf("Forbidden: %v", err), http.StatusForbidden)
 		return
 	}
 
@@ -64,7 +65,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		Value:    refreshTokenString,
 		Expires:  time.Now().Add(cfg.Secrets.Jwt.RefreshExpiryDuration * time.Hour),
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   false,
 		SameSite: http.SameSiteStrictMode,
 		Path:     "/refresh",
 	})
@@ -134,7 +135,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    "",
 		Expires:  time.Unix(0, 0), // Expire immediately
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   false,
 		SameSite: http.SameSiteStrictMode,
 		Path:     "/refresh",
 	})

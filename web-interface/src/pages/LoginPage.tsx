@@ -4,9 +4,10 @@ import { Card, CardBody, Input, Button, Spinner } from "@heroui/react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from '../contexts/AuthContext';
 import { authenticate } from "../services/authenticate";
-
+import { useNotificationContext } from '../contexts/NotificationContext';
 const LoginPage = () => {
     const navigate = useNavigate();
+    const { notifyError } = useNotificationContext();
     const { token, setToken, isAuthenticated } = useAuth();
     const [email, setEmail] = useState('');
     const [loginLoading, setLoginLoading] = useState(false);
@@ -24,7 +25,8 @@ const LoginPage = () => {
             })
             .catch((error) => {
                 setLoginLoading(false);
-                return error.response ? alert(error.response.data.message) : alert(error.message);
+                console.log(error.response)
+                return error.response ? notifyError("Authentication Failure", error.response.data) : notifyError("Authentication Failure", error.response.message);
             })
     }
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
