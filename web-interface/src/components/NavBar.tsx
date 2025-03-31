@@ -1,6 +1,6 @@
-import React from 'react'
-
-import AvatarLogo from '../assets/icons/avatar.svg';
+import React, { useContext } from 'react'
+import { useAuth } from '../contexts/AuthContext';
+import avatarLogo from '../assets/icons/avatar.svg';
 import {
     Navbar, 
     NavbarBrand, 
@@ -16,6 +16,8 @@ import {
     DropdownTrigger
 } from "@heroui/react";
 const NavBar : React.FC = () => {
+    const { logout } = useAuth();
+
     return (
         <Navbar
             shouldHideOnScroll
@@ -27,15 +29,15 @@ const NavBar : React.FC = () => {
             }}
             position='sticky'
         >
-            <NavbarBrand as="div">
+            <NavbarBrand as="div" className='-ml-6 sm:ml-0'>
                 <div className="flex justify-start items-center w-64">
-                    <span className="font-signatra text-gray-100 text-[3rem] sh">
+                    <span className="font-signatra text-gray-100 text-[3rem]">
                         HomeShare
                     </span>
                 </div>
             </NavbarBrand>
             
-            <NavbarContent as="div" justify='end'>
+            <NavbarContent as="div" justify='end' className='-mr-6 sm:ml-0'>
                 <Dropdown placement="bottom">
                     <DropdownTrigger>
                         <Avatar
@@ -44,7 +46,7 @@ const NavBar : React.FC = () => {
                         color="secondary"
                         size="sm"
                         icon={
-                            <img src={AvatarLogo} alt="Avatar" className='' />
+                            <img src={avatarLogo} alt="Avatar" className='' />
                         }
                         />
                     </DropdownTrigger>
@@ -55,7 +57,12 @@ const NavBar : React.FC = () => {
                         </DropdownItem>
                         
                         <DropdownItem key="logout" color="danger">
-                        Log Out
+                            <div 
+                                onClick={logout}
+                                className="flex"
+                            >    
+                            Log Out
+                            </div>
                         </DropdownItem>
                     </DropdownMenu>
                 </Dropdown>
