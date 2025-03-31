@@ -1,14 +1,15 @@
-import React, { useRef } from 'react';
-import { ProgressBarRef } from '../types'; 
-import "react-perfect-scrollbar/dist/css/styles.css";
+import React from 'react';
+
 import PerfectScrollbar from 'react-perfect-scrollbar';
+import { IoMdDownload } from "react-icons/io";
+import { HiXMark } from "react-icons/hi2";
+import "react-perfect-scrollbar/dist/css/styles.css";
 import { ScrollShadow } from '@heroui/react';
+
 import ProgressBar from './ProgressBar.tsx'
+import { ProgressBarRef } from '../types'; 
 import { useFileContext } from '../contexts/FileContext.tsx';
 import UploadItem from './UploadItem.tsx';
-import { LuTrash2 } from "react-icons/lu";
-import { HiXMark } from "react-icons/hi2";
-import { IoMdDownload } from "react-icons/io";
 
 
 const FileBox : React.FC<{fileId: string, refCallback: (el: ProgressBarRef | null, fileId: string) => void}> = ({fileId, refCallback}) => {
