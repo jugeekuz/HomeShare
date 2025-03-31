@@ -1,24 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@heroui/button';
 import { Spinner } from '@heroui/spinner';
 import { Progress } from '@heroui/progress';
 
 import { useFileContext } from '../contexts/FileContext.tsx';
+import { useNotificationContext } from '../contexts/NotificationContext.tsx';
 
 const FileUploader : React.FC = () => {
     const { files, filesReady, progress, filesUploading, uploadFiles } = useFileContext();
+    const { notifySuccess } = useNotificationContext();
+    useEffect(() => {
+        if (filesUploading) return;
+        if (progress == 100) {
+            notifySuccess("Upload Success", "All files were uploaded successfully")
+        }
+    },[progress, filesUploading])
 
     return (
         <>
-        {/* { progress !== 0 && (
-            <Progress 
-            isStriped 
-            aria-label="Loading..." 
-            className="w-[70%]" 
-            color="secondary" 
-            value={progress}
-            />
-        )} */}
+        
         <div className="w-full px-2">
             <Button
                 color="primary"
