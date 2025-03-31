@@ -1,6 +1,6 @@
 import config from "../configs/config";
 import { FileMeta } from "../types";
-
+import api from "../api/api";
 
 type Callback = () => void;
 
@@ -17,18 +17,15 @@ export const uploadChunk = async (chunkFormData: FormData, callback: Callback, r
     const MAX_RETRIES = config.MAX_CHUNK_RETRIES;
 
     try {
-        const response = await fetch(config.UPLOAD_URL, {
-            method: "POST",
-            body: chunkFormData,
-        });
-
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
+        await api.post(config.UPLOAD_URL, chunkFormData);
         callback();
         return { success: true };
     } catch (error) {
         if (retry >= MAX_RETRIES) {
-        return { success: false, error: `Max retries exceeded: ${(error as Error).message}` };
+            return { 
+                success: false, 
+                error: `Max retries exceeded: ${(error as Error).message}` 
+            };
         }
         return uploadChunk(chunkFormData, callback, retry + 1);
     }
