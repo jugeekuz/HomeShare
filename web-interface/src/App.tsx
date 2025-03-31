@@ -2,9 +2,11 @@ import React from "react"
 import AppRoutes from "./AppRoutes.tsx"
 import {HeroUIProvider} from "@heroui/react";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
+import { NotificationProvider } from "./contexts/NotificationContext.tsx";
 const App : React.FC = () => {
 	return (
         <HeroUIProvider>
+        <NotificationProvider>
 		<div
 			className="relative items-center w-[100dvw] h-[100dvh] "
 			style={{
@@ -28,6 +30,7 @@ const App : React.FC = () => {
                 </AuthProvider>
 			</div>
 		</div>
+        </NotificationProvider>
         </HeroUIProvider>
 	)
 }
