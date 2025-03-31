@@ -1,7 +1,7 @@
 import React from "react"
 import AppRoutes from "./AppRoutes.tsx"
 import {HeroUIProvider} from "@heroui/react";
-
+import { AuthProvider } from "./contexts/AuthContext.tsx";
 const App : React.FC = () => {
 	return (
         <HeroUIProvider>
@@ -23,7 +23,9 @@ const App : React.FC = () => {
 			/>
 
 			<div className="relative z-[2] h-full w-full flex flex-col items-center justify-center">
+                <AuthProvider>
                     <AppRoutes/>
+                </AuthProvider>
 			</div>
 		</div>
         </HeroUIProvider>

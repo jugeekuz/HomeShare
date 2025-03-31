@@ -1,77 +1,101 @@
 import React, {useState} from 'react'
 
 import { Card, CardBody, Input, Button, Spinner } from "@heroui/react";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useAuth } from '../contexts/AuthContext';
+import { authenticate } from "../services/authenticate";
 
 const LoginPage = () => {
+    const navigate = useNavigate();
+    const { token, setToken, isAuthenticated } = useAuth();
     const [email, setEmail] = useState('');
     const [loginLoading, setLoginLoading] = useState(false);
     const [password, setPassword] = useState('');
     const [isVisible, setIsVisible] = useState(false);
 
-    const handleSubmit = () => {}
+    const login = () => {
+        if (email === '' || password === '') return;
+        setLoginLoading(true);
+        authenticate(email, password)
+            .then((res) => {
+                console.log(res);
+                setToken(res.access_token);
+                setLoginLoading(false);
+            })
+            .catch((error) => {
+                setLoginLoading(false);
+                return error.response ? alert(error.response.data.message) : alert(error.message);
+            })
+    }
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        login();
+    };
 
     return (
-        <div className="flex w-full h-full justify-center items-center">
-            {/* Rectangle */}
-            <Card className="max-w-full w-[400px] bg-wprimary -mt-10">
-                <CardBody className="justify-center items-center pb-8">
-                    <div className="flex flex-col w-full justify-center items-center">
-                        <div className="flex flex-col justify-center items-center w-64 my-3">
-                            <span className="font-signatra bg-secondary-gradient bg-clip-text text-transparent font-medium text-[3rem] ">
-                                HomeShare
-                            </span>
-                            <span className="text-xs text-gray-500 -mt-3">
-                                Log in to your account to continue
-                            </span>
-                        </div>
-
-                        <div className="flex w-[85%] mt-3 mb-1">
-
-                            <form onSubmit={handleSubmit} className="flex-col w-full">
-                                <Input
-                                isRequired
-                                onChange={((e) => setEmail(e.target.value))}
-                                type="email"
-                                label="Email"
-                                placeholder="Enter your email"
-                                variant="bordered"
-                                className="border-1 rounded-t-xl remove-child-border hover:border-gray-400 focus-within:border-gray-400"
-                                autoComplete="email"
-                                />
-                                
-                                <Input
-                                isRequired
-                                onChange={((e) => setPassword(e.target.value))}
-                                type={isVisible ? "text" : "password"}
-                                label="Password"
-                                placeholder="Enter your password"
-                                variant="bordered"
-                                className="border-1 border-t-0 rounded-b-xl remove-child-border hover:border-gray-400 hover:border-t-1 focus-within:border-t-1 focus-within:border-gray-400"
-                                endContent={
-                                    <button className="focus:outline-none" type="button" onClick={() => setIsVisible(!isVisible)} aria-label="toggle password visibility">
-                                    {isVisible ? (
-                                        <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                                    ) : (
-                                        <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                                    )}
-                                    </button>
-                                }
-                                autoComplete="password"
-                                />
-                                
-                                <Button
-                                type="submit"
-                                className="w-full mt-6 bg-primary-gradient"
-                                color="primary"
-                                >
-                                {loginLoading ? <Spinner/> : "Log In"}
-                                </Button>
-                            </form>
-                        </div>
-                    </div>
-                </CardBody>
-            </Card>
-        </div>
+        isAuthenticated 
+            ? <Navigate to="/"/> 
+            :    <div className="flex w-full h-full justify-center items-center">
+                    {/* Rectangle */}
+                    <Card className="max-w-full w-[400px] bg-wprimary -mt-10">
+                        <CardBody className="justify-center items-center pb-8">
+                            <div className="flex flex-col w-full justify-center items-center">
+                                <div className="flex flex-col justify-center items-center w-64 my-3">
+                                    <span className="font-signatra bg-secondary-gradient bg-clip-text text-transparent font-medium text-[3rem] ">
+                                        HomeShare
+                                    </span>
+                                    <span className="text-xs text-gray-500 -mt-3">
+                                        Log in to your account to continue
+                                    </span>
+                                </div>
+            
+                                <div className="flex w-[85%] mt-3 mb-1">
+            
+                                    <form onSubmit={handleSubmit} className="flex-col w-full">
+                                        <Input
+                                        isRequired
+                                        onChange={((e) => setEmail(e.target.value))}
+                                        type="email"
+                                        label="Email"
+                                        placeholder="Enter your email"
+                                        variant="bordered"
+                                        className="border-1 rounded-t-xl remove-child-border hover:border-gray-400 focus-within:border-gray-400"
+                                        autoComplete="email"
+                                        />
+                                        
+                                        <Input
+                                        isRequired
+                                        onChange={((e) => setPassword(e.target.value))}
+                                        type={isVisible ? "text" : "password"}
+                                        label="Password"
+                                        placeholder="Enter your password"
+                                        variant="bordered"
+                                        className="border-1 border-t-0 rounded-b-xl remove-child-border hover:border-gray-400 hover:border-t-1 focus-within:border-t-1 focus-within:border-gray-400"
+                                        endContent={
+                                            <button className="focus:outline-none" type="button" onClick={() => setIsVisible(!isVisible)} aria-label="toggle password visibility">
+                                            {isVisible ? (
+                                                <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                                            ) : (
+                                                <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                                            )}
+                                            </button>
+                                        }
+                                        autoComplete="password"
+                                        />
+                                        
+                                        <Button
+                                        type="submit"
+                                        className="w-full mt-6 bg-primary-gradient"
+                                        color="primary"
+                                        >
+                                        {loginLoading ? <Spinner/> : "Log In"}
+                                        </Button>
+                                    </form>
+                                </div>
+                            </div>
+                        </CardBody>
+                    </Card>
+                </div>
     )
 }
 
