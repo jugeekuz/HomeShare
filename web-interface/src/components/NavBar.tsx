@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { useAuth } from '../contexts/AuthContext';
 import avatarLogo from '../assets/icons/avatar.svg';
 import {
@@ -16,7 +16,7 @@ import {
     DropdownTrigger
 } from "@heroui/react";
 const NavBar : React.FC = () => {
-    const { logout } = useAuth();
+    const { logout, claims } = useAuth();
 
     return (
         <Navbar
@@ -53,7 +53,7 @@ const NavBar : React.FC = () => {
                     <DropdownMenu aria-label="Profile Actions" variant="flat">
                         <DropdownItem key="profile" className="h-14 gap-2">
                             <p className="font-semibold">Signed in as</p>
-                            <p className="font-semibold">zoey@example.com</p>
+                            <p className="font-semibold">{claims?.user_id}</p>
                         </DropdownItem>
                         
                         <DropdownItem key="logout" color="danger">

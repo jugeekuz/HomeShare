@@ -11,16 +11,18 @@ import api from '../api/api.ts';
 import { logout as logoutCallback } from '../services/authenticate.ts';
 
 export interface AuthContextType {
-    username: string;
-    token: string | null;
-    setToken: (token: string | null) => void;
-    logout : () => void;
-    isAuthenticated: boolean;
-    refreshLoading: boolean;
+    token:              string | null;
+    claims:             TokenClaims | null;
+    setToken:           (token: string | null) => void;
+    logout :            () => void;
+    isAuthenticated:    boolean;
+    refreshLoading:     boolean;
 }
 
-interface TokenPayload {
-    nickname?: string;
+interface TokenClaims {
+    user_id:    string;
+    folder_id:  string;
+    access:     "r" | "w" | "rw"
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,14 +39,21 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [token, setToken] = useState<string | null>(null);
+    const [claims, setClaims] = useState<TokenClaims | null>(null);
     const [refreshLoading, setRefreshLoading] = useState<boolean>(true);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
     useEffect(() => {
         setIsAuthenticated(!!token);
+        const tokenClaims = extractClaims(token);
+        setClaims(tokenClaims);
+        if (tokenClaims === null) {
+            console.error("Token Claims Are Invalid");
+            return;
+        }
     }, [token])
 
-    const decodeIdToken = (token: string | null): TokenPayload | null => {
+    const decodeIdToken = (token: string | null): TokenClaims | null => {
         try {
             if (!token) return null;
             const base64Url = token.split('.')[1];
@@ -62,13 +71,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const extractClaims = (token: string | null): TokenClaims | null => {
+        const decodedToken = decodeIdToken(token);
+        if (!decodedToken?.user_id || !decodedToken?.folder_id || !decodedToken?.access) return null;
+        if (!["r", "w", "rw"].includes(decodedToken.access)) return null;
+        const tokenClaims : TokenClaims = decodedToken;
+        return tokenClaims;
+    }
+
     const logout = () => {
         logoutCallback();
         setToken(null);
     }
-
-    const tokenPayload = decodeIdToken(token);
-    const username = tokenPayload?.nickname || 'User';
 
     useLayoutEffect(() => {
         refresh()
@@ -94,25 +108,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useLayoutEffect(() => {
         const refreshInterceptor = api.interceptors.response.use(
-        (response) => response,
-        async (error) => {
-            const originalRequest = error.config;
-            if (error?.response?.status === 401 && 
-                (error?.response?.data?.message === 'Unauthorized' ||
-                error?.response?.data?.message === 'The incoming token has expired')
-            ) {
-                try {
-                    const response = await refresh();
-                    setToken(response.access_token);
-                    originalRequest.headers.Authorization = `Bearer ${response.access_token}`;
-                    (originalRequest as any)._retry = true;
-                    return api(originalRequest);
-                } catch {
-                    setToken(null);
+            (response) => response,
+            async (error) => {
+                const originalRequest = error.config;
+                if (error?.response?.status === 401 && 
+                    (error?.response?.data?.message === 'Unauthorized' ||
+                    error?.response?.data?.message === 'The incoming token has expired')
+                ) {
+                    try {
+                        const response = await refresh();
+                        setToken(response.access_token);
+                        originalRequest.headers.Authorization = `Bearer ${response.access_token}`;
+                        (originalRequest as any)._retry = true;
+                        return api(originalRequest);
+                    } catch {
+                        setToken(null);
+                    }
                 }
+                return Promise.reject(error);
             }
-            return Promise.reject(error);
-        }
         );
         return () => {
             api.interceptors.request.eject(refreshInterceptor);
@@ -121,7 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return (
         <AuthContext.Provider
-            value={{ username, token, setToken, isAuthenticated, logout, refreshLoading }}
+            value={{ token, setToken, isAuthenticated, claims, logout, refreshLoading }}
         >
             {children}
         </AuthContext.Provider>
