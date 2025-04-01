@@ -4,9 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { FileMeta, FileItem, FileContextType, FileStore } from '../types';
 import { chunkAndUpload } from '../services/chunkFile';
 import { ProgressBarRefs } from '../types';
+import { useNotificationContext } from './NotificationContext';
 export const FileContext = createContext<FileContextType | undefined>(undefined);
 
 export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
+    const { notifyError, notifyInfo, notifySuccess } = useNotificationContext();
     const [files, setFiles] = useState<FileStore | null>(null);
     const [filesReady, setFilesReady] = useState<boolean>(false);
     const [filesUploading, setFilesUploading] = useState<boolean>(false);
@@ -78,13 +80,24 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
             const setFileProgress = (progress: number) => {
                 progressBarRefs.current[fileId]?.updateProgress(Math.ceil(progress));
             }
+            try {
+                const uploadResponse = await chunkAndUpload(setFileProgress, fileItem.fileMeta, fileItem.file);
 
-            const uploadResponse = await chunkAndUpload(setFileProgress, fileItem.fileMeta, fileItem.file);
-
-            if (uploadResponse.success) {
-                totalFileSizeSent.current += fileSize;
-                setProgress((_) => (totalFileSizeSent.current/totalFileSize.current)*100);
+                if (uploadResponse.success) {
+                    totalFileSizeSent.current += fileSize;
+                    setProgress((_) => (totalFileSizeSent.current/totalFileSize.current)*100);
+                } else {
+                    notifyError("Upload Error", `File \`${fileItem.fileMeta.fileName}${fileItem.fileMeta.fileExtension}\` failed to upload`)
+                }
+            } catch (error) {
+                notifyError("Upload Error", `File \`${fileItem.fileMeta.fileName}${fileItem.fileMeta.fileExtension}\` failed to upload`)
             }
+        }
+        if ((totalFileSizeSent.current/totalFileSize.current)*100 === 100) { // dont use state as it is async
+            notifySuccess("Upload Success", "Files finished uploaded successfully")
+        } else {
+            console.log(progress)
+            notifyInfo("Upload Error", "Files finished uploading. Some files failed to upload")
         }
         setFilesUploading(false);
     }
