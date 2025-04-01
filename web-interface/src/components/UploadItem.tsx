@@ -4,9 +4,10 @@ import { FileIcon, defaultStyles, DefaultExtensionType } from 'react-file-icon';
 import { FileIconType } from '../types';
 import SparkMD5 from 'spark-md5';
 import { useFileContext } from '../contexts/FileContext.tsx';
-
+import { useNotificationContext } from '../contexts/NotificationContext.tsx';
 const UploadItem : React.FC<{fileId: string}> = ({ fileId }) => {
     const MAX_FILE_SIZE_MB = config.MAX_FILE_SIZE_MB;
+    const { notifyError } = useNotificationContext();
     const { files, addMd5Hash } = useFileContext();
     const [file, setFile] = useState<File | null>(null);
     const [fileStyle, setFileStyle] = useState<FileIconType>({fileExtension: '', fileStyle: defaultStyles});
@@ -15,7 +16,7 @@ const UploadItem : React.FC<{fileId: string}> = ({ fileId }) => {
     useEffect(() => {
         if (!files) return;
         if (!(fileId in files)) {
-            console.error(`FileId ${fileId} does not exist in File Store.`)
+            notifyError("File Error", `FileId ${fileId} does not exist in File Store.`)
             return;
         }
         setFile(files[fileId].file);
@@ -36,8 +37,8 @@ const UploadItem : React.FC<{fileId: string}> = ({ fileId }) => {
     useEffect(() => {
         if (!file) return;
 
-        if (file.size > MAX_FILE_SIZE_MB) {
-            console.error(`File size is ${file.size} above maximum ${MAX_FILE_SIZE_MB}`);
+        if (file.size > MAX_FILE_SIZE_MB) {            
+            notifyError("File Error", `File size is ${file.size} above maximum ${MAX_FILE_SIZE_MB}`)
             return;
         }
 
@@ -51,13 +52,13 @@ const UploadItem : React.FC<{fileId: string}> = ({ fileId }) => {
                 const hash = SparkMD5.ArrayBuffer.hash(buffer);
                 setFileMd5(hash);
             } catch (error) {
-                console.error('Error generating MD5 hash:', error);
+                notifyError("File Error", `Error generating MD5 hash: ${error}`)
             }
         };
 
         reader.onerror = (error) => {
-            if (isCancelled) return;
-            console.error('Error reading file:', error);
+            if (isCancelled) return;            
+            notifyError("File Error", `Error reading file: ${error}`)
         };
 
         reader.readAsArrayBuffer(file);

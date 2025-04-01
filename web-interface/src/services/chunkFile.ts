@@ -62,35 +62,35 @@ export const chunkAndUpload = async (onProgress: ProgressCallback, fileMeta: Fil
     const CONCURRENT_CHUNKS = config.MAX_CONCURRENT_CHUNKS;
   
     try {
-      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-      let uploadedChunks = 0;
-  
-      const updateProgress = () => {
-        uploadedChunks++;
-        const percentage = (uploadedChunks / totalChunks) * 100;
-        onProgress(percentage);
-      };
+        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+        let uploadedChunks = 0;
+    
+        const updateProgress = () => {
+            uploadedChunks++;
+            const percentage = (uploadedChunks / totalChunks) * 100;
+            onProgress(percentage);
+        };
 
-      let uploadPromises: Promise<UploadResponse>[] = [];
+        let uploadPromises: Promise<UploadResponse>[] = [];
 
-      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-        const chunkFormData = createChunk(file, fileMeta, chunkIndex);
+        for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+            const chunkFormData = createChunk(file, fileMeta, chunkIndex);
 
-        uploadPromises.push(
-          uploadChunk(chunkFormData, updateProgress)
-        );
-        
-        // Upload N chunks concurrently
-        if (uploadPromises.length >= CONCURRENT_CHUNKS || chunkIndex === totalChunks-1) {
-          const results = await Promise.all(uploadPromises);
-          if (results.some(res => !res.success)) throw new Error("Chunk upload failed");
-          uploadPromises = []; // Reset for the next batch
+            uploadPromises.push(
+            uploadChunk(chunkFormData, updateProgress)
+            );
+            
+            // Upload N chunks concurrently
+            if (uploadPromises.length >= CONCURRENT_CHUNKS || chunkIndex === totalChunks-1) {
+            const results = await Promise.all(uploadPromises);
+            if (results.some(res => !res.success)) throw new Error("Chunk upload failed");
+            uploadPromises = []; // Reset for the next batch
+            }
         }
-      }
-  
-      return { success: true };
+    
+        return { success: true };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+        return { success: false, error: (error as Error).message };
     }
   };
 
