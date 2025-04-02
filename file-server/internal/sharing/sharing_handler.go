@@ -20,6 +20,8 @@ import (
 )
 
 type SharingDetails struct {
+	Access			string `json:"access"`
+	FolderName		string `json:"folder_name"`
 	ExpiryDuration	string `json:"expiry_duration"`
 }
 
@@ -80,7 +82,7 @@ func SharingHandler(w http.ResponseWriter, r *http.Request) {
 		UserId:         uuid.New().String(),
 		ExpiryDuration: expiryDuration,
 		FolderId:       sharingFolderName,
-		Access:         "rw",
+		Access:         sharingDetails.Access,
 	}
 	_, refreshToken, err := auth.GenerateTokens(refreshParams, refreshParams)
 	if err != nil {

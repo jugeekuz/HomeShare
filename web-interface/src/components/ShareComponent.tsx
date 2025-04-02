@@ -72,13 +72,6 @@ const ShareComponent = () => {
     const handleSumbit = () => {
         if (!folderName || !sharingOption || !date) return;
 
-        // to do 
-        // create / test function below (check sharingDetails on backend) OK
-        // test post
-        // handle notification on success/error
-        // change on backend folder name etc
-        // set linkUrl
-
         const timeDurationGoString = dateValueToGoDuration(date) // create function
         
         const itemToPost : SharingDetails = {

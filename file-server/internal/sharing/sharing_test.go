@@ -149,6 +149,7 @@ func createSharingReq(expiryDuration string, claimFolderId string, access string
 
 	creds := SharingDetails{
 		ExpiryDuration: expiryDuration,
+		Access: "rw",
 	}
 	body, err := json.Marshal(creds)
 	if err != nil {
