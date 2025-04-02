@@ -96,7 +96,6 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
         if ((totalFileSizeSent.current/totalFileSize.current)*100 === 100) { // dont use state as it is async
             notifySuccess("Upload Success", "Files finished uploaded successfully")
         } else {
-            console.log(progress)
             notifyInfo("Upload Error", "Files finished uploading. Some files failed to upload")
         }
         setFilesUploading(false);

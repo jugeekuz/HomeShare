@@ -63,10 +63,8 @@ const ShareComponent = () => {
     useEffect(() => {
         if (!date) return;
 
-        console.log(date)
         const timeDurationGoString = dateValueToGoDuration(date) // create function
 
-        console.log(`hey felicia ${timeDurationGoString}`)
     }, [date])
 
     const handleSumbit = () => {

@@ -87,7 +87,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         refresh()
             .then((res) => {
-                console.log(res.access_token)
                 setToken(res.access_token);
             })
             .catch(() => setToken(null))

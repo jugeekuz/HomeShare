@@ -18,13 +18,11 @@ const LoginPage = () => {
         setLoginLoading(true);
         authenticate(email, password)
             .then((res) => {
-                console.log(res);
                 setToken(res.access_token);
                 setLoginLoading(false);
             })
             .catch((error) => {
                 setLoginLoading(false);
-                console.log(error.response)
                 return error.response ? notifyError("Authentication Failure", error.response.data) : notifyError("Authentication Failure", error.response.message);
             })
     }
