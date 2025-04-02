@@ -23,7 +23,7 @@ interface SharingResponse {
 }
 
 const dateValueToGoDuration = (expiryDate : DateValue) : string => {
-    const parsedDate = expiryDate instanceof Date ? expiryDate : new Date(expiryDate);
+    const parsedDate = expiryDate instanceof Date ? expiryDate : expiryDate.toDate('UTC');
     if (isNaN(parsedDate.getTime())) {
         return "";
     }
