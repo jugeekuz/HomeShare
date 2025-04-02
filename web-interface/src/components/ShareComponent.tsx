@@ -1,29 +1,129 @@
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 
-import { Input, DatePicker, Snippet, Select, SelectItem, Button, Tooltip, DateValue } from '@heroui/react'
+import { Input, DatePicker, Snippet, Select, SelectItem, Button, Tooltip, DateValue, Spinner } from '@heroui/react'
 import { FaLink } from "react-icons/fa6";
 import { FiExternalLink } from "react-icons/fi";
 import { LuLink } from "react-icons/lu";
 import { getLocalTimeZone, today } from "@internationalized/date";
 import { IoMdInformationCircle } from "react-icons/io";
 
+import config from '../configs/config';
+import usePost from '../hooks/usePost';
+import { useNotificationContext } from '../contexts/NotificationContext';
+
+
+interface SharingDetails {
+    expiry_duration:    string;
+    access:             "rw" | "r" | "w"
+}
+
+interface SharingResponse {
+    folder_id:          string;
+    refresh_token:      string;
+}
+
+const dateValueToGoDuration = (expiryDate : DateValue) : string => {
+    const parsedDate = expiryDate instanceof Date ? expiryDate : new Date(expiryDate);
+    if (isNaN(parsedDate.getTime())) {
+        return "";
+    }
+    
+    const now = new Date();
+    const diffMs = parsedDate.getTime() - now.getTime();
+    
+    let totalSeconds = Math.floor(diffMs / 1000);
+    let hours = Math.floor(totalSeconds / 3600);
+    totalSeconds %= 3600;
+    let seconds = totalSeconds;
+
+    const hoursString = hours !== 0 ? `${hours}h` : "";
+    const secondsString = seconds !== 0 ? `${seconds}s` : "";
+    
+    return `${hoursString}${secondsString}`;
+  }
+
+const sharingTooltipGuide = "Once you create the folder, copy the link on the bottom to share w/ your friends."
+
+const sharingOptions = [
+    {key: "r", label: "Read"},
+    {key: "w", label: "Write"},
+    {key: "rw", label: "Read/Write"}, 
+]
 
 const ShareComponent = () => {
     const [folderName, setFolderName] = useState<string>("");
-    const [sharingOption, setSharingOption] = useState<"r" | "w" | "rw">("rw")
-    const [linkUrl, setLinkUrl] = useState<string | null>(null)
-    const [date, setDate] = useState<DateValue | null>(null)
+    const [sharingOption, setSharingOption] = useState<"r" | "w" | "rw">("rw");
+    const [linkUrl, setLinkUrl] = useState<string | null>(null);
+    const [refreshToken, setRefreshToken] = useState<string | null>(null);
+    const [folderId, setFolderId] = useState<string | null>(null);
+    const [date, setDate] = useState<DateValue | null>(null);
+    const {postItem, loading, success, error, data} = usePost(config.SHARE_URL);
+    const {notifySuccess, notifyError} = useNotificationContext();
+
+    useEffect(() => {
+        if (!date) return;
+
+        console.log(date)
+        const timeDurationGoString = dateValueToGoDuration(date) // create function
+
+        console.log(`hey felicia ${timeDurationGoString}`)
+    }, [date])
+
     const handleSumbit = () => {
+        if (!folderName || !sharingOption || !date) return;
+
+        // to do 
+        // create / test function below (check sharingDetails on backend) OK
+        // test post
+        // handle notification on success/error
+        // change on backend folder name etc
+        // set linkUrl
+
+        const timeDurationGoString = dateValueToGoDuration(date) // create function
+        
+        const itemToPost : SharingDetails = {
+            expiry_duration: timeDurationGoString,
+            access: sharingOption
+        };
+        
+        postItem(itemToPost)
+        
         return undefined
     }
 
-    const sharingTooltipGuide = "Once you create the folder, copy the link on the bottom to share w/ your friends."
+    useEffect(() => {
+        if (!success) return;
+        notifySuccess("Sharing Folder Success", "Sharing folder successfully created. Copy the link to share with your friends.")
+    }, [success])
 
-    const sharingOptions = [
-        {key: "r", label: "Read"},
-        {key: "w", label: "Write"},
-        {key: "rw", label: "Read/Write"}, 
-    ]
+    useEffect(() => {
+        if (!error) return
+        notifyError("Sharing Folder Error", "There was an unexpected error when creating the folder.")
+    }, [error])
+
+    useEffect(() => {
+        if (!data) return;
+        const res = data as SharingResponse;
+        if (!res?.folder_id || !res?.refresh_token) return;
+
+        setRefreshToken(res.refresh_token);
+        setFolderId(res.folder_id);
+    }, [data])
+
+    useEffect(() => {
+        if (!refreshToken || !folderId) return;
+        const baseUrl = window.location.origin;
+
+        const sharingUrl = new URL('/sharing', baseUrl);
+
+        sharingUrl.searchParams.set('refresh', refreshToken);
+        sharingUrl.searchParams.set('folder-id', folderId);
+        sharingUrl.searchParams.set('folder-name', folderName);
+
+        setLinkUrl(sharingUrl.toString());
+
+    }, [refreshToken, folderId, folderName])
+    
 
     return (
         <div className="flex flex-col w-full h-full justify-center items-center p-">
@@ -34,7 +134,7 @@ const ShareComponent = () => {
                         Create a Sharing Folder
                     </span>
                     <Tooltip  placement="bottom" content={sharingTooltipGuide}>
-                        <IoMdInformationCircle className='mb-1'/>
+                        <IoMdInformationCircle aria-label="Sharing information" className='mb-1'/>
                     </Tooltip>
                 </div>
                 <span className="font-brsonoma font-light text-gray-500 text-xs">
@@ -57,6 +157,7 @@ const ShareComponent = () => {
                 </div>
                 <div className="flex w-[6.7rem] h-8 justify-center items-center ml-2 ">
                     <Select 
+                        aria-label="Sharing permissions"
                         className="w-[6.7rem]"
                         multiple={false}
                         onSelectionChange={(keys) => {
@@ -110,7 +211,7 @@ const ShareComponent = () => {
                     labelPlacement='outside'
                     value={date}
                     onChange={setDate}
-                    minValue={today(getLocalTimeZone())}
+                    minValue={today(getLocalTimeZone()).add({ days: 1 })}
                     classNames={{
                         inputWrapper: 'rounded-md border border-gray-300 bg-wsecondary h-[2.5rem]',
                         innerWrapper: 'bg-transparent font-roboto font-light',
@@ -147,12 +248,14 @@ const ShareComponent = () => {
                 </div>
                 <div className="flex w-3/5">
                     <Button 
+                        aria-label='Share'
                         isDisabled={linkUrl !== null}
                         color="primary"
                         className="text-xs bg-primary-gradient rounded-md w-full"
                         size="md"
+                        onPress={handleSumbit}
                     > 
-                        Create Folder
+                       {loading? <Spinner color='default'/> : "Create Folder"} 
                     </Button>
                 </div>
             </div>

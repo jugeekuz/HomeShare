@@ -5,6 +5,7 @@ const config = {
     MAX_FILE_SIZE_MB: 100 * 1024 * 1024,
     BASE_URL: 'https://kuza.gr',
     UPLOAD_URL: 'https://kuza.gr/upload',
+    SHARE_URL: 'https://kuza.gr/share',
     DOWNLOAD_URL: 'https://kuza.gr/download'
 }
 
