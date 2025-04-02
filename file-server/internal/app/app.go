@@ -44,10 +44,10 @@ func SetupServer(jm *job.JobManager, dbCallback DatabaseCallback) (*http.Server,
 	}
 
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{cfg.DomainOrigin, "http://localhost:3001"},
-		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodOptions},
-		AllowedHeaders:   []string{"Authorization", "Content-Type"},
-    	AllowCredentials: true,
+		AllowedOrigins: 	[]string{cfg.DomainOrigin, "http://localhost:3001"},
+		AllowedMethods: 	[]string{http.MethodGet, http.MethodPost, http.MethodOptions},
+		AllowedHeaders:   	[]string{"Authorization", "Content-Type", "Set-Cookie"},
+    	AllowCredentials: 	true,
 	})
 
 	mux := http.NewServeMux()

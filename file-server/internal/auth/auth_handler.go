@@ -63,11 +63,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshTokenString,
-		Expires:  time.Now().Add(cfg.Secrets.Jwt.RefreshExpiryDuration * time.Hour),
+		Expires:  time.Now().Add(cfg.Secrets.Jwt.RefreshExpiryDuration),
 		HttpOnly: true,
-		Secure:   false,
-		SameSite: http.SameSiteStrictMode,
-		Path:     "/refresh",
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+		Path:     "/",
 	})
 
 	response := TokenResponse{
@@ -111,7 +111,7 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 
 	accessParams := &TokenParameters{
 		UserId:         userId,
-		ExpiryDuration: 1,
+		ExpiryDuration: cfg.Secrets.Jwt.AccessExpiryDuration,
 		FolderId:       folderId,
 		Access:         access,
 	}
@@ -135,9 +135,9 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    "",
 		Expires:  time.Unix(0, 0), // Expire immediately
 		HttpOnly: true,
-		Secure:   false,
-		SameSite: http.SameSiteStrictMode,
-		Path:     "/refresh",
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+		Path:     "/",
 	})
 
 	response := TokenResponse{
