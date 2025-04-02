@@ -60,12 +60,6 @@ const ShareComponent = () => {
     const {postItem, loading, success, error, data} = usePost(config.SHARE_URL);
     const {notifySuccess, notifyError} = useNotificationContext();
 
-    useEffect(() => {
-        if (!date) return;
-
-        const timeDurationGoString = dateValueToGoDuration(date) // create function
-
-    }, [date])
 
     const handleSumbit = () => {
         if (!folderName || !sharingOption || !date) return;
