@@ -148,7 +148,7 @@ func TestLoginHandler(t *testing.T) {
 			t.Errorf("Expected 403 Forbidden, got : %d", rr.Code)
 		}
 
-		if strings.TrimSpace(rr.Body.String()) != "Forbidden" {
+		if strings.TrimSpace(rr.Body.String()) != "Forbidden: invalid credentials" {
 			t.Errorf("Expected 'Forbidden', got : %q", rr.Body.String())
 		}
 	})

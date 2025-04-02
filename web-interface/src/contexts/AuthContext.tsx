@@ -2,7 +2,7 @@ import {
     createContext,
     useState,
     useContext,
-    useLayoutEffect,
+    // useEffect,
     ReactNode,
     useEffect,
 } from 'react';
@@ -84,16 +84,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setToken(null);
     }
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         refresh()
             .then((res) => {
+                console.log(res.access_token)
                 setToken(res.access_token);
             })
             .catch(() => setToken(null))
             .finally(() => setRefreshLoading(false));
     }, []);
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         const authInterceptor = api.interceptors.request.use((config) => {
             config.headers.Authorization =
                 !(config as any)._retry && token
@@ -106,7 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, [token]);
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         const refreshInterceptor = api.interceptors.response.use(
             (response) => response,
             async (error) => {
@@ -129,7 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
         );
         return () => {
-            api.interceptors.request.eject(refreshInterceptor);
+            api.interceptors.response.eject(refreshInterceptor);
         };
     }, []);
 

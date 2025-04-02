@@ -130,7 +130,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return []byte(cfg.Secrets.Jwt.JwtSecret), nil
 		})
 		if err != nil || !token.Valid {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 

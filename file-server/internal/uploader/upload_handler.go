@@ -120,7 +120,7 @@ func ParseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error)
 		TotalChunks:   totalChunks,
 	}
 
-	fileNameRegex := regexp.MustCompile(`^[a-zA-Z0-9._ -]+$`)
+	fileNameRegex := regexp.MustCompile(`^[a-zA-Z0-9._ -\(\)]+$`)
 	if !fileNameRegex.MatchString(meta.FileName) {
 		return ChunkMeta{}, Chunk{}, fmt.Errorf("invalid file name format: %s", meta.FileName)
 	}
