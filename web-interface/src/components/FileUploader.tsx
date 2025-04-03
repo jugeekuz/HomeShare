@@ -3,11 +3,11 @@ import { Button } from '@heroui/button';
 import { Spinner } from '@heroui/spinner';
 import { Progress } from '@heroui/progress';
 
-import { useFileContext } from '../contexts/FileContext.tsx';
+import { useFileUploadContext } from '../contexts/FileUploadContext';
 import { useNotificationContext } from '../contexts/NotificationContext.tsx';
 
 const FileUploader : React.FC = () => {
-    const { files, filesReady, filesUploading, uploadFiles } = useFileContext();
+    const { files, filesReady, filesUploading, uploadFiles } = useFileUploadContext();
 
     return (
         <>

@@ -3,12 +3,12 @@ import config from '../configs/config'
 import { FileIcon, defaultStyles, DefaultExtensionType } from 'react-file-icon';
 import { FileIconType } from '../types';
 import SparkMD5 from 'spark-md5';
-import { useFileContext } from '../contexts/FileContext.tsx';
+import { useFileUploadContext } from '../contexts/FileUploadContext';
 import { useNotificationContext } from '../contexts/NotificationContext.tsx';
 const UploadItem : React.FC<{fileId: string}> = ({ fileId }) => {
     const MAX_FILE_SIZE_MB = config.MAX_FILE_SIZE_MB;
     const { notifyError } = useNotificationContext();
-    const { files, addMd5Hash } = useFileContext();
+    const { files, addMd5Hash } = useFileUploadContext();
     const [file, setFile] = useState<File | null>(null);
     const [fileStyle, setFileStyle] = useState<FileIconType>({fileExtension: '', fileStyle: defaultStyles});
     const [fileMd5, setFileMd5] = useState<string | null>(null);

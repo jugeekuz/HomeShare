@@ -5,6 +5,7 @@ import { useAuth } from './contexts/AuthContext';
 import NavBar from './components/NavBar';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
+import SharingGateway from './pages/SharingGateway';
 import SharingPage from './pages/SharingPage';
 import LoadingPage from './pages/LoadingPage';
 
@@ -54,6 +55,16 @@ const AppRoutes: React.FC = () => {
                 <LoginPage />
             </PublicRoute>
             }
+        />
+        <Route 
+            path="/sharing-gateway"
+            element={
+                <PublicRoute>
+                    <>
+                    <SharingGateway />
+                    </>
+                </PublicRoute>
+                }
         />
         <Route
             path="/sharing"

@@ -4,19 +4,20 @@ import { useNavigate } from "react-router-dom";
 import UploadComponent from "../components/UploadComponent";
 import ShareComponent from "../components/ShareComponent";
 import { FaLink } from "react-icons/fa6";
-import { FileProvider } from "../contexts/FileContext";
+import { FileUploadProvider } from "../contexts/FileUploadContext.tsx";
 import { LuUpload, LuDownload } from "react-icons/lu";
 import DownloadComponent from "../components/DownloadComponent";
-
+import { useSearchParams } from "react-router-dom";
 type Key = string | number;
 
 const SharingPage: React.FC = () => {
-    const [selectedTab, setSelectedTab] = useState<Key>("download")
+    const [selectedTab, setSelectedTab] = useState<Key>("download");
+    const [searchParams] = useSearchParams();
     // 
     return (
         <div className="flex w-full h-full justify-center items-center">
             {/* Rectangle */}
-            <FileProvider>
+            <FileUploadProvider>
             <Card className="max-w-full w-[440px]  bg-wprimary -mt-10">
                 <CardBody className="justify-center items-center">
                     <Tabs
@@ -44,7 +45,7 @@ const SharingPage: React.FC = () => {
                             <div className="flex flex-col justify-start items-center mt-1">
                                 <div className="flex justify-center items-center">
                                     <span className="font-brsonoma font-normal text-gray-950 text-md mr-1">
-                                        Sharing Folder <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">Vytina</span>
+                                        Sharing Folder <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">{searchParams.get("folder-name") || ""}</span>
                                     </span>
                                 </div>
                                 <span className="font-brsonoma font-light text-gray-500 text-xs">
@@ -64,7 +65,7 @@ const SharingPage: React.FC = () => {
                                 <div className="flex flex-col justify-start items-center mt-1">
                                     <div className="flex flex-col justify-center items-center mt-1 mb-1">
                                         <span className="font-brsonoma font-normal text-gray-950 text-md mr-1">
-                                             Sharing Folder <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">Vytina</span>
+                                             Sharing Folder <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">{searchParams.get("folder-name") || ""}</span>
                                         </span>
                                         <span className="font-brsonoma font-light text-gray-500 text-xs">
                                             Explore what others shared or upload your files
@@ -77,7 +78,7 @@ const SharingPage: React.FC = () => {
                     </Tabs>
                 </CardBody>
             </Card>
-            </FileProvider>
+            </FileUploadProvider>
         </div>
     );
 };

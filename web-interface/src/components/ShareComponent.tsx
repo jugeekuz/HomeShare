@@ -99,7 +99,7 @@ const ShareComponent = () => {
         if (!refreshToken || !folderId) return;
         const baseUrl = window.location.origin;
 
-        const sharingUrl = new URL('/sharing', baseUrl);
+        const sharingUrl = new URL('/sharing-gateway', baseUrl);
 
         sharingUrl.searchParams.set('refresh', refreshToken);
         sharingUrl.searchParams.set('folder-id', folderId);

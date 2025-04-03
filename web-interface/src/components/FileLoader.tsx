@@ -1,10 +1,10 @@
 import React, { useRef } from 'react';
 import { FileUploadIcon } from './FileIcons.tsx';
 
-import { useFileContext } from '../contexts/FileContext.tsx';
+import { useFileUploadContext } from '../contexts/FileUploadContext';
 
 const FileLoader : React.FC = () => {
-    const { addFile } = useFileContext();
+    const { addFile } = useFileUploadContext();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const handleFileChange = (e : React.ChangeEvent<HTMLInputElement>) => {

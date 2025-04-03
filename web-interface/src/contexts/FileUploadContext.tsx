@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useRef, ReactNode, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
-import { FileMeta, FileItem, FileContextType, FileStore } from '../types';
+import { FileMeta, FileItem, FileUploadContextType, FileStore } from '../types';
 import { chunkAndUpload } from '../services/chunkFile';
 import { ProgressBarRefs } from '../types';
 import { useNotificationContext } from './NotificationContext';
-export const FileContext = createContext<FileContextType | undefined>(undefined);
+export const FileUploadContext = createContext<FileUploadContextType | undefined>(undefined);
 
-export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
+export const FileUploadProvider : React.FC<{children : ReactNode}> = ({children}) => {
     const { notifyError, notifyInfo, notifySuccess } = useNotificationContext();
     const [files, setFiles] = useState<FileStore | null>(null);
     const [filesReady, setFilesReady] = useState<boolean>(false);
@@ -124,16 +124,16 @@ export const FileProvider : React.FC<{children : ReactNode}> = ({children}) => {
     }
 
     return (
-        <FileContext.Provider value={{ files, setFiles, addFile, deleteFile, filesReady, uploadFiles, progressBarRefs, progress, filesUploading, addMd5Hash }}>
+        <FileUploadContext.Provider value={{ files, setFiles, addFile, deleteFile, filesReady, uploadFiles, progressBarRefs, progress, filesUploading, addMd5Hash }}>
         {children}
-        </FileContext.Provider>
+        </FileUploadContext.Provider>
     );
 }
 
-export const useFileContext = () => {
-    const context = useContext(FileContext);
+export const useFileUploadContext = () => {
+    const context = useContext(FileUploadContext);
     if (!context) {
-      throw new Error("useFileContext must be used within a FileProvider");
+      throw new Error("useFileUploadContext must be used within a FileUploadProvider");
     }
     return context;
 };

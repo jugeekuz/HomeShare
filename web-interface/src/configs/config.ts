@@ -6,6 +6,7 @@ const config = {
     BASE_URL: 'https://kuza.gr',
     UPLOAD_URL: 'https://kuza.gr/upload',
     SHARE_URL: 'https://kuza.gr/share',
+    GET_SHARING_FILES_URL: 'https://kuza.gr/share-files',
     DOWNLOAD_URL: 'https://kuza.gr/download'
 }
 

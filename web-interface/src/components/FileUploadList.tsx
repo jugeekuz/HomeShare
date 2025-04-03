@@ -7,13 +7,13 @@ import "react-perfect-scrollbar/dist/css/styles.css";
 import { ScrollShadow } from '@heroui/react';
 
 import ProgressBar from './ProgressBar.tsx'
-import { ProgressBarRef } from '../types'; 
-import { useFileContext } from '../contexts/FileContext.tsx';
+import { ProgressBarRef } from '../types/index.ts'; 
+import { useFileUploadContext } from '../contexts/FileUploadContext.tsx';
 import UploadItem from './UploadItem.tsx';
 
 
 const FileBox : React.FC<{fileId: string, refCallback: (el: ProgressBarRef | null, fileId: string) => void}> = ({fileId, refCallback}) => {
-    const { files, deleteFile } = useFileContext();
+    const { files, deleteFile } = useFileUploadContext();
 
     const convertBytes = (bytes: number) : string => {
         if (bytes === 0) return "0 B";
@@ -52,12 +52,6 @@ const FileBox : React.FC<{fileId: string, refCallback: (el: ProgressBarRef | nul
                 >
                 <HiXMark className='text-gray-600'/>
             </div>
-            <div className="absolute flex justify-center items-center rounded-full border bg-wsecondary w-8 h-8 right-3 bottom-[0.3rem] cursor-pointer">
-                <IoMdDownload
-                    size={15}
-                    className='text-primary'
-                />
-            </div>
         </div>
         <div className="flex justify-center items-center w-full">
             <ProgressBar 
@@ -68,8 +62,8 @@ const FileBox : React.FC<{fileId: string, refCallback: (el: ProgressBarRef | nul
     </div>)
 }
 
-const FileList : React.FC = () => {
-    const { progressBarRefs, files } = useFileContext();
+const FileUploadList : React.FC = () => {
+    const { progressBarRefs, files } = useFileUploadContext();
     const refCallback = (el: ProgressBarRef | null, fileId: string) => {
         progressBarRefs.current[fileId] = el;
     }
@@ -106,4 +100,4 @@ const FileList : React.FC = () => {
     );
 }
 
-export default FileList;
+export default FileUploadList;
