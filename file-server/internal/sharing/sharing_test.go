@@ -887,13 +887,24 @@ func TestGetSharingFilesSuccess(t *testing.T) {
 
 	// Check if files were returned
 	var sharingFilesResponse SharingFilesResponse
-	json.NewDecoder(rr.Body).Decode(&sharingFilesResponse)
+	if err := json.NewDecoder(rr.Body).Decode(&sharingFilesResponse); err != nil {
+		t.Fatalf("error unmarshalling sharing files response: %v", err)
+	}
 
 	if len(sharingFilesResponse.Files) != 2 {
-		t.Errorf("Expected total sharing files of 2, got: %d",len(sharingFilesResponse.Files))
+		t.Errorf("Expected total sharing files of 2, got: %d", len(sharingFilesResponse.Files))
 	}
-	
-	if (len(sharingFilesResponse.Files) >= 2) && (sharingFilesResponse.Files[0] != "someFileName.txt") && (sharingFilesResponse.Files[1] != "someFileName.txt") {
+
+	// Check if one of the files corresponds to "someFileName.txt"
+	found := false
+	for _, file := range sharingFilesResponse.Files {
+		// Reconstruct the file name from name and extension)
+		if file.FileName+file.FileExtension == "someFileName.txt" {
+			found = true
+			break
+		}
+	}
+	if !found {
 		t.Error("`someFileName.txt` doesn't exist inside the sharing folder")
 	}
 }

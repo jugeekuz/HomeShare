@@ -3,6 +3,8 @@ package sharing
 import (
 	"fmt"
 	"encoding/json"
+	"strings"
+	"strconv"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -34,8 +36,14 @@ type SharingResponse struct {
 	FolderId 		string `json:"folder_id"`
 }
 
+type SharingFileItem struct {
+	FileName 		string `json:"file_name"`
+	FileExtension 	string `json:"file_extension"`
+	FileSize		string `json:"file_size"`
+}
+
 type SharingFilesResponse struct {
-	Files		[]string `json:"files"`
+	Files		[]SharingFileItem `json:"files"`
 }
 
 func SharingHandler(w http.ResponseWriter, r *http.Request) {
@@ -186,8 +194,23 @@ func GetSharingFilesHandler(w http.ResponseWriter, r *http.Request) {
 	var sharingFilesResponse SharingFilesResponse
 	for _, entry := range entries {
 		if !entry.IsDir() {
-			sharingFilesResponse.Files = append(sharingFilesResponse.Files, entry.Name())
+			fileName := entry.Name()
+			ext := filepath.Ext(fileName)
+			
+			fileInfo, err := entry.Info()
+			if err != nil {
+				continue
+			}
+
+			nameWithoutExt := strings.TrimSuffix(fileName, ext)
+			
+			sharingFilesResponse.Files = append(sharingFilesResponse.Files, SharingFileItem{
+				FileName:      nameWithoutExt,
+				FileExtension: ext,
+				FileSize:      strconv.FormatInt(fileInfo.Size(), 10),
+			})
 		}
 	}
+	
 	json.NewEncoder(w).Encode(sharingFilesResponse)
 }
