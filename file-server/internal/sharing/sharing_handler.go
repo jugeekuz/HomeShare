@@ -108,6 +108,12 @@ func SharingHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddSharingFilesHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager) {
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	cfg := config.LoadConfig()
 
 	folderId := r.Header.Get("Folder-Id")

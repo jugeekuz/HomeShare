@@ -14,7 +14,7 @@ import FileDownloadList from './FileDownloadList';
 const DownloadComponent: React.FC = () => {
     const [empty, setEmpty] = useState<boolean>(false);
     const {notifyError} = useNotificationContext();
-    const { files, setFiles, addFile } = useFileDownloadContext();
+    const { files, setFiles, addFile, downloadZip } = useFileDownloadContext();
     const [searchParams] = useSearchParams();
     const [folderId, setFolderId] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
@@ -56,6 +56,7 @@ const DownloadComponent: React.FC = () => {
                 for (const file of data.files) {
                     const fileNameWoExt = file["file_name"];
                     const fileExtension = file["file_extension"];
+                    if (fileExtension === ".zip") continue;
                     const fileSize = file["file_size"];
 
                     const fileName = `${fileNameWoExt}${fileExtension}`
@@ -108,6 +109,10 @@ const DownloadComponent: React.FC = () => {
                     color="primary"
                     className="text-[13px] bg-primary-gradient rounded-md w-full mt-1"
                     size="md"
+                    onPress={() => {
+                        if (!folderId) return;
+                        downloadZip(folderId)
+                    }}
                 >
                     <IoMdDownload 
                         size={15}

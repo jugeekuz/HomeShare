@@ -2,7 +2,7 @@ import {
     createContext,
     useState,
     useContext,
-    // useEffect,
+    useLayoutEffect,
     ReactNode,
     useEffect,
 } from 'react';
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setToken(null);
     }
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         refresh()
             .then((res) => {
                 setToken(res.access_token);

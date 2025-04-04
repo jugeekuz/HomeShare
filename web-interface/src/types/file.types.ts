@@ -25,7 +25,7 @@ export interface FileUploadContextType {
     setFiles: React.Dispatch<React.SetStateAction<FileStore | null>>;
     addFile: AddFile;
     deleteFile: (fileId: string) => void;
-    uploadFiles: () => Promise<void>;
+    uploadFiles: (folderId ?: string) => Promise<void>;
     addMd5Hash: (fileId: string, md5Hash: string) => void;
     filesReady: boolean;
     filesUploading: boolean;

@@ -12,12 +12,15 @@ interface UploadResponse {
     error?:     string;
 }
 
-export const uploadChunk = async (chunkFormData: FormData, callback: Callback, retry: number = 0) : Promise<UploadResponse> => {
+export const uploadChunk = async (chunkFormData: FormData, callback: Callback, retry: number = 0, folderId ?: string) : Promise<UploadResponse> => {
 
     const MAX_RETRIES = config.MAX_CHUNK_RETRIES;
 
     try {
-        await api.post(config.UPLOAD_URL, chunkFormData);
+        await api.post(!!folderId ? config.SHARING_POST_URL : config.UPLOAD_URL, chunkFormData, {
+            headers: folderId ? { "Folder-Id": folderId } : {} 
+        }
+        );
         callback();
         return { success: true };
     } catch (error) {
@@ -27,7 +30,7 @@ export const uploadChunk = async (chunkFormData: FormData, callback: Callback, r
                 error: `Max retries exceeded: ${(error as Error).message}` 
             };
         }
-        return uploadChunk(chunkFormData, callback, retry + 1);
+        return uploadChunk(chunkFormData, callback, retry + 1, folderId);
     }
 }
 
@@ -55,7 +58,7 @@ export const createChunk = (file: File, fileMeta: FileMeta, chunkIndex: number) 
     return formData;
 }
 
-export const chunkAndUpload = async (onProgress: ProgressCallback, fileMeta: FileMeta, file: File) : Promise<UploadResponse> => {
+export const chunkAndUpload = async (onProgress: ProgressCallback, fileMeta: FileMeta, file: File, folderId ?: string) : Promise<UploadResponse> => {
     if (!file) return { success: false, error: "No file provided" };
     
     const CHUNK_SIZE = config.MAX_CHUNK_SIZE_MB * 1024 * 1024;
@@ -77,14 +80,14 @@ export const chunkAndUpload = async (onProgress: ProgressCallback, fileMeta: Fil
             const chunkFormData = createChunk(file, fileMeta, chunkIndex);
 
             uploadPromises.push(
-            uploadChunk(chunkFormData, updateProgress)
+                uploadChunk(chunkFormData, updateProgress, 0, folderId)
             );
             
             // Upload N chunks concurrently
             if (uploadPromises.length >= CONCURRENT_CHUNKS || chunkIndex === totalChunks-1) {
-            const results = await Promise.all(uploadPromises);
-            if (results.some(res => !res.success)) throw new Error("Chunk upload failed");
-            uploadPromises = []; // Reset for the next batch
+                const results = await Promise.all(uploadPromises);
+                if (results.some(res => !res.success)) throw new Error("Chunk upload failed");
+                uploadPromises = []; // Reset for the next batch
             }
         }
     

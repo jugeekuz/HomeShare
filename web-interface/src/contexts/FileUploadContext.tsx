@@ -70,7 +70,7 @@ export const FileUploadProvider : React.FC<{children : ReactNode}> = ({children}
         setFiles(newFiles);
     }
 
-    const uploadFiles = async () => {
+    const uploadFiles = async (folderId ?: string) => {
         for (const fileId in files) {
             setFilesUploading(true);
 
@@ -81,8 +81,8 @@ export const FileUploadProvider : React.FC<{children : ReactNode}> = ({children}
                 progressBarRefs.current[fileId]?.updateProgress(Math.ceil(progress));
             }
             try {
-                const uploadResponse = await chunkAndUpload(setFileProgress, fileItem.fileMeta, fileItem.file);
-
+                const uploadResponse = await chunkAndUpload(setFileProgress, fileItem.fileMeta, fileItem.file, folderId);
+                
                 if (uploadResponse.success) {
                     totalFileSizeSent.current += fileSize;
                     setProgress((_) => (totalFileSizeSent.current/totalFileSize.current)*100);
