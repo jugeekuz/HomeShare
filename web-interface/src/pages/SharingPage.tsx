@@ -1,13 +1,13 @@
 import React, {useState} from "react";
-import { Tabs, Tab, Card, CardBody, Divider, DropdownMenu } from "@heroui/react";
-import { useNavigate } from "react-router-dom";
+import { Tabs, Tab, Card, CardBody } from "@heroui/react";
+
 import UploadComponent from "../components/UploadComponent";
-import ShareComponent from "../components/ShareComponent";
-import { FaLink } from "react-icons/fa6";
 import { FileUploadProvider } from "../contexts/FileUploadContext.tsx";
+import { FileDownloadProvider } from "../contexts/FileDownloadContext.tsx";
 import { LuUpload, LuDownload } from "react-icons/lu";
 import DownloadComponent from "../components/DownloadComponent";
 import { useSearchParams } from "react-router-dom";
+
 type Key = string | number;
 
 const SharingPage: React.FC = () => {
@@ -17,7 +17,7 @@ const SharingPage: React.FC = () => {
     return (
         <div className="flex w-full h-full justify-center items-center">
             {/* Rectangle */}
-            <FileUploadProvider>
+            
             <Card className="max-w-full w-[440px]  bg-wprimary -mt-10">
                 <CardBody className="justify-center items-center">
                     <Tabs
@@ -52,7 +52,9 @@ const SharingPage: React.FC = () => {
                                     Explore what others shared or upload your files
                                 </span>
                             </div>
-                                <DownloadComponent/>
+                                <FileDownloadProvider>
+                                <DownloadComponent />
+                                </FileDownloadProvider>
                             </div>
                         </Tab>
                         <Tab key="upload" title={
@@ -72,13 +74,14 @@ const SharingPage: React.FC = () => {
                                         </span>
                                     </div>
                                 </div>
+                                <FileUploadProvider>
                                 <UploadComponent/>
+                                </FileUploadProvider>
                             </div>
                         </Tab>
                     </Tabs>
                 </CardBody>
             </Card>
-            </FileUploadProvider>
         </div>
     );
 };

@@ -1,5 +1,7 @@
 import { ProgressBarRefs } from "./progress.types";
 import { DefaultExtensionType, FileIconProps } from "react-file-icon";
+
+// Upload File Types
 export interface FileMeta {
     fileId:         string;
     fileName:       string;
@@ -18,7 +20,7 @@ export interface FileStore {
 
 export type AddFile = (file: File) => void
 
-export interface FileContextType {
+export interface FileUploadContextType {
     files: FileStore | null;
     setFiles: React.Dispatch<React.SetStateAction<FileStore | null>>;
     addFile: AddFile;
@@ -34,4 +36,31 @@ export interface FileContextType {
 export interface FileIconType {
     fileExtension: string;
     fileStyle: Record<DefaultExtensionType, Partial<FileIconProps>> | Partial<FileIconProps>
+}
+// Download Files Types
+export interface FileDownloadItem {
+    fileNameWoExt:      string;
+    fileExtension:      string;
+    fileSize:           number;
+}
+
+export interface FileDownloadItemStore {
+    [key: string]: FileDownloadItem
+}
+
+export interface FileDownloadParams {
+    file: string;
+    folder_id: string;
+}
+
+export interface GetSharingFilesParams {
+    folder_id : string
+}
+
+export interface FileDownloadContextType {
+    files: FileDownloadItemStore | null;
+    addFile: (file: FileDownloadItem, fileName: string) => void;
+    setFiles:  React.Dispatch<React.SetStateAction<FileDownloadItemStore | null>>;
+    downloadFile: (fileName: string, folderId: string) => void;
+    downloadZip: (folderId: string) => void;
 }
