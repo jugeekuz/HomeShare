@@ -48,7 +48,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const tokenClaims = extractClaims(token);
         setClaims(tokenClaims);
         if (tokenClaims === null) {
-            console.error("Token Claims Are Invalid");
             return;
         }
     }, [token])
@@ -93,7 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .finally(() => setRefreshLoading(false));
     }, []);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const authInterceptor = api.interceptors.request.use((config) => {
             config.headers.Authorization =
                 !(config as any)._retry && token
@@ -106,28 +105,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, [token]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const refreshInterceptor = api.interceptors.response.use(
             (response) => response,
             async (error) => {
                 const originalRequest = error.config;
-                if (error?.response?.status === 401 && 
-                    (error?.response?.data?.message === 'Unauthorized' ||
-                    error?.response?.data?.message === 'The incoming token has expired')
+                if (
+                    error?.response?.status === 401 &&
+                    !originalRequest._retry &&
+                    (error?.response?.data?.trim() === 'Unauthorized' ||
+                        error?.response?.data?.trim() === 'The incoming token has expired')
                 ) {
+                    originalRequest._retry = true;
                     try {
                         const response = await refresh();
                         setToken(response.access_token);
-                        originalRequest.headers.Authorization = `Bearer ${response.access_token}`;
-                        (originalRequest as any)._retry = true;
+                        originalRequest.headers = {
+                            ...originalRequest.headers,
+                            Authorization: `Bearer ${response.access_token}`,
+                        };
                         return api(originalRequest);
-                    } catch {
+                    } catch (refreshError) {
                         setToken(null);
+                        return Promise.reject(refreshError);
                     }
                 }
+    
                 return Promise.reject(error);
             }
         );
+    
         return () => {
             api.interceptors.response.eject(refreshInterceptor);
         };
