@@ -46,7 +46,7 @@ const SharingGateway: React.FC = () => {
         if (!folderId || !folderName || !refreshToken) return;
         if (isAuthenticated) return;
 
-        setCookie("refresh_token", refreshToken, 30, ".kuza.gr")
+        setCookie("refresh_token", refreshToken, 30)
         setRefreshLoading(true);
         refresh()
             .then((data) => {

@@ -15,9 +15,10 @@ import {
     DropdownMenu, 
     DropdownTrigger
 } from "@heroui/react";
+import { useNavigate } from 'react-router-dom';
 const NavBar : React.FC = () => {
     const { logout, claims } = useAuth();
-
+    const navigate = useNavigate();
     return (
         <Navbar
             shouldHideOnScroll
@@ -30,7 +31,9 @@ const NavBar : React.FC = () => {
             position='sticky'
         >
             <NavbarBrand as="div" className='-ml-6 sm:ml-0'>
-                <div className="flex justify-start items-center w-64">
+                <div
+                    onClick={() => navigate("/")} 
+                    className="flex justify-start items-center w-64 cursor-pointer">
                     <span className="font-signatra text-gray-100 text-[3rem]">
                         HomeShare
                     </span>

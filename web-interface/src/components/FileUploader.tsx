@@ -32,9 +32,7 @@ const FileUploader : React.FC = () => {
                 className="text-md w-full bg-primary-gradient"
                 size="md"
                 radius="sm"
-                onPress={() => {
-                    uploadFiles(folderId);
-                }}
+                onPress={() => uploadFiles(folderId)}
             >
                 {((files && !filesReady) || filesUploading) ? <Spinner color="default"/> : "Send Files"}
             </Button>
