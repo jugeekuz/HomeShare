@@ -54,6 +54,21 @@ func getUniqueFileName(path string) string {
 	}
 }
 
+func ParseFormFileId(w http.ResponseWriter, r *http.Request) (string, error) {
+	const MAX_MBYTES = 5
+
+	r.Body = http.MaxBytesReader(w, r.Body, (MAX_MBYTES<<20)+1024)
+
+	if err := r.ParseMultipartForm(MAX_MBYTES << 20); err != nil {
+		return "", fmt.Errorf("unable to parse form: %w", err)
+	}
+
+	if r.FormValue("fileId") == "" {
+		return "", fmt.Errorf("fileId is required")
+	}
+	return r.FormValue("fileId"), nil
+}
+
 func ParseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error) {
 	const MAX_MBYTES = 5
 
