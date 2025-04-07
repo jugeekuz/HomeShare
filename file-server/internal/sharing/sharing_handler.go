@@ -1,7 +1,6 @@
 package sharing
 
 import (
-	"fmt"
 	"encoding/json"
 	"strings"
 	"strconv"
@@ -148,18 +147,6 @@ func AddSharingFilesHandler(w http.ResponseWriter, r *http.Request, jm *job.JobM
 
 	uploader.UploadHandler(w, r, jm, fullFolderIdPath)
 
-	entries, err := os.ReadDir(fullFolderIdPath)
-	if err != nil {
-		http.Error(w, "Error while reading directory", http.StatusInternalServerError)
-		return
-	}
-	files := make([]string, len(entries))
-	for index, entry := range entries {
-		files[index] = entry.Name()
-	}
-
-	zipFileName := fmt.Sprintf("%s.zip", folderId)
-	go helpers.CreateZip(fullFolderIdPath, zipFileName, files, jm)
 }
 
 func GetSharingFilesHandler(w http.ResponseWriter, r *http.Request) {

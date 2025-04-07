@@ -21,6 +21,7 @@ import (
 	"file-server/config"
 	"file-server/internal/job"
 	"file-server/internal/auth"
+	"file-server/internal/helpers"
 	
 )
 
@@ -135,7 +136,7 @@ func ParseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error)
 		TotalChunks:   totalChunks,
 	}
 
-	fileNameRegex := regexp.MustCompile(`^[a-zA-Z0-9._ -\(\)]+$`)
+	fileNameRegex := regexp.MustCompile(`^[a-zA-Z0-9._ -\(\)\-]+$`)
 	if !fileNameRegex.MatchString(meta.FileName) {
 		return ChunkMeta{}, Chunk{}, fmt.Errorf("invalid file name format: %s", meta.FileName)
 	}
@@ -163,13 +164,13 @@ func ChunkAssemble(meta ChunkMeta, jm *job.JobManager, absolutePath string) {
 
 	chunksDir := filepath.Join(absolutePath, cfg.ChunksDir, meta.FileId)
 	if _, err := os.Stat(chunksDir); os.IsNotExist(err) {
-		log.Printf("Chunk directory %s does not exist for file ID: %s", chunksDir, meta.FileId)
+		log.Printf("[FILE-SERVER] Chunk directory %s does not exist for file ID: %s", chunksDir, meta.FileId)
 		return
 	}
 
 	defer func() {
 		if err := os.RemoveAll(chunksDir); err != nil {
-			log.Printf("Error deleting chunk directory %s: %v", chunksDir, err)
+			log.Printf("[FILE-SERVER] Error deleting chunk directory %s: %v", chunksDir, err)
 		}
 	}()
 
@@ -179,7 +180,7 @@ func ChunkAssemble(meta ChunkMeta, jm *job.JobManager, absolutePath string) {
 
 	finalFile, err := os.Create(finalFilePath)
 	if err != nil {
-		log.Printf("Error creating final file %s: %v", finalFilePath, err)
+		log.Printf("[FILE-SERVER] Error creating final file %s: %v", finalFilePath, err)
 		return
 	}
 	defer finalFile.Close()
@@ -190,14 +191,14 @@ func ChunkAssemble(meta ChunkMeta, jm *job.JobManager, absolutePath string) {
 		chunkPath := filepath.Join(chunksDir, fmt.Sprintf("chunk_%d", i))
 		chunkFile, err := os.Open(chunkPath)
 		if err != nil {
-			log.Printf("Error while opening chunk %s : %q", chunkPath, err)
+			log.Printf("[FILE-SERVER] Error while opening chunk %s : %q", chunkPath, err)
 			return
 		}
 
 		multiWriter := io.MultiWriter(finalFile, hasher)
 		if _, err := io.Copy(multiWriter, chunkFile); err != nil {
 			chunkFile.Close()
-			log.Printf("Error copying chunk %s: %v", chunkPath, err)
+			log.Printf("[FILE-SERVER] Error copying chunk %s: %v", chunkPath, err)
 			return
 		}
 		chunkFile.Close()
@@ -209,15 +210,15 @@ func ChunkAssemble(meta ChunkMeta, jm *job.JobManager, absolutePath string) {
 	if strings.ToLower(computedHash) != expectedHash {
 		finalFile.Close() // File has to be closed in order to be removed
 
-		log.Printf("MD5 mismatch for %s. Computed: %s, Expected: %s", meta.FileId, computedHash, expectedHash)
+		log.Printf("[FILE-SERVER] MD5 mismatch for %s. Computed: %s, Expected: %s", meta.FileId, computedHash, expectedHash)
 		if err := os.Remove(finalFilePath); err != nil {
-			log.Printf("Error while deleting final file path %s: %q", finalFilePath, err)
+			log.Printf("[FILE-SERVER] Error while deleting final file path %s: %q", finalFilePath, err)
 		}
 
 		return
 	}
 
-	log.Printf("Successfully assembled file %s", finalFilePath)
+	log.Printf("[FILE-SERVER] Successfully assembled file %s", finalFilePath)
 }
 
 func UploadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager, folderPath string) {
@@ -276,7 +277,34 @@ func UploadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager, f
 
 	if len(files) == meta.TotalChunks {
 		if (jm.AcquireJob(meta.FileId)) {
-			go ChunkAssemble(meta, jm, folderPath)
+			go func (){
+				ChunkAssemble(meta, jm, folderPath)
+
+				if folderPath != cfg.UploadDir {
+					entries, err := os.ReadDir(folderPath)
+					if err != nil {
+						log.Printf("[FILE-SERVER] Error while reading directory : %v", err)
+					}
+					files := make([]string, len(entries))
+					for index, entry := range entries {
+						if strings.HasSuffix(entry.Name(), ".zip") {
+							continue
+						}
+						files[index] = entry.Name()
+						log.Printf("aaaaaaaaa name : %s", files[index])
+					}
+
+					folderId := filepath.Base(folderPath)
+					zipFileName := fmt.Sprintf("%s.zip", folderId)
+					log.Printf("folder path : %s Folder id : %s zipfileName: %s", folderPath, folderId, zipFileName)
+					err = helpers.CreateZip(folderPath, zipFileName, files, jm)
+					if err != nil {
+						log.Printf("[FILE-SERVER] Received error while creating zip file : %v", err)
+					} else {
+						log.Printf("[FILE-SERVER] Successfully created zip file : %s", zipFileName)
+					}
+				}
+			}()
 		}
 	}
 

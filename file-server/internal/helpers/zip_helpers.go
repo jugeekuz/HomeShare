@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"os"
+	"fmt"
 	"io"
 	"path/filepath"
 	"archive/zip"
@@ -13,7 +14,9 @@ import (
 func CreateZip(folderPath string, zipFileName string, files []string, jm *job.JobManager) error {
 	jobId := zipFileName
 
-	jm.AcquireJob(jobId)
+	if !jm.AcquireJob(jobId) {
+		return fmt.Errorf("[FILE-SERVER] Error while trying to acquire job Id for zip file : %s", zipFileName)
+	}
 	defer jm.ReleaseJob(jobId)
 
 	zipFilePath := filepath.Join(folderPath, zipFileName)
@@ -28,6 +31,13 @@ func CreateZip(folderPath string, zipFileName string, files []string, jm *job.Jo
 
 	for _, file := range files {
 		filePath := filepath.Join(folderPath, file)
+		info, err := os.Stat(filePath)
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			continue
+		}
 		if err := AddFileToZip(zipWriter, filePath); err != nil {
 			return err
 		}
@@ -43,8 +53,9 @@ func AddFileToZip(zipWriter *zip.Writer, filePath string) error {
 		return err
 	}
 	defer file.Close()
-
-	writer, err := zipWriter.Create(filePath)
+	
+	fileName := filepath.Base(filePath)
+	writer, err := zipWriter.Create(fileName)
 	if err != nil {
 		return err
 	}
