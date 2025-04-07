@@ -23,7 +23,7 @@ export const FileDownloadProvider : React.FC<{children : ReactNode}> = ({childre
         link.click();
         document.body.removeChild(link);
 
-        notifyInfo("File Download", `File ${fileName} download has started. Check your downloads`)
+        notifyInfo("File Download", `${fileName} has successfully started downloading`)
     }
 
     const downloadZip = async (folderId: string) => {

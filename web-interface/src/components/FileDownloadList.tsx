@@ -56,7 +56,6 @@ const FileBox : React.FC<{fileName: string}> = ({fileName}) => {
         <div className="relative flex flex-row justify-start items-center w-full p-2">
             <div className="flex justify-center items-center w-7 h-7">
                 <DownloadItem fileName={fileName}  />
-                {/* <UploadItem fileId={fileId}/> */}
             </div>
             <div className="flex flex-col w-full px-3 justify-center">
                 <span className="font-linik text-[13px] text-gray-700 font-bold">
@@ -68,7 +67,8 @@ const FileBox : React.FC<{fileName: string}> = ({fileName}) => {
                     </span>
                 </div>
             </div>
-            <div className="absolute flex justify-center items-center rounded-full border bg-wsecondary w-8 h-8 right-3 bottom-[0.3rem] cursor-pointer">
+            {/* Here */}
+            <div className="absolute flex justify-center items-center rounded-full border bg-wsecondary w-8 h-8 right-3 top-1/2 -translate-y-1/2 cursor-pointer">
                 <IoMdDownload
                     onClick={downloadCb}
                     size={15}
