@@ -15,7 +15,7 @@ import (
 func main() {
 	cfg := config.LoadConfig()
 	if err := os.MkdirAll(cfg.SharingDir, os.ModePerm); err != nil {
-		log.Fatal("Error while creating sharing folder directory")
+		log.Fatal("[FILE-SERVER] Error while creating sharing folder directory")
 	}
 
 	go func () {
@@ -28,7 +28,7 @@ func main() {
 
 	server, err := app.SetupServer(jm, app.InitDatabase)
 	if err != nil {
-		log.Fatalf("Server setup failed: %v", err)
+		log.Fatalf("[FILE-SERVER] Server setup failed: %v", err)
 	}
 
 	server.Addr = ":443"

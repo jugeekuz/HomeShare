@@ -43,11 +43,11 @@ type Config struct {
 func LoadConfig() *Config {
 	accessTokenExp, err := time.ParseDuration(getEnv("ACCESS_TOKEN_EXP", "15m"))
 	if err != nil {
-		log.Fatalf("Invalid ACCESS_TOKEN_EXP value: %v", err)
+		log.Fatalf("[FILE-SERVER] Invalid ACCESS_TOKEN_EXP value: %v", err)
 	}
 	refreshTokenExp, err := time.ParseDuration(getEnv("REFRESH_TOKEN_EXP", "720h"))
 	if err != nil {
-		log.Fatalf("Invalid REFRESH_TOKEN_EXP value: %v", err)
+		log.Fatalf("[FILE-SERVER] Invalid REFRESH_TOKEN_EXP value: %v", err)
 	}
 	return &Config{
 		DomainOrigin: getEnv("DOMAIN_ORIGIN", "https://kuza.gr"),
