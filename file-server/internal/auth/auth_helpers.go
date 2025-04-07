@@ -138,3 +138,26 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r.WithContext(ctx))
 	})
 }
+
+func RefreshAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cfg := config.LoadConfig()
+		cookie, err := r.Cookie("refresh_token")
+		if err != nil {
+			http.Error(w, "Unauthorized: No refresh token provided", http.StatusUnauthorized)
+			return
+		}
+
+		token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
+			return []byte(cfg.Secrets.Jwt.JwtSecret), nil
+		})
+
+		if err != nil || !token.Valid {
+			http.Error(w, "Unauthorized: Invalid refresh token", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), ClaimsContextKey, token.Claims)
+		next(w, r.WithContext(ctx))
+	})
+}

@@ -15,36 +15,15 @@ export const FileDownloadProvider : React.FC<{children : ReactNode}> = ({childre
     const downloadFile = async (fileName: string, folderId: string) => {
         if (!files) return;
         
-        try {
-            const params: FileDownloadParams = {
-                file: fileName,
-                folder_id: folderId
-            };
-            const response = await api.get(config.DOWNLOAD_URL, {
-                responseType: 'blob',
-                params: params,
-            });
-            
-            const blob = new Blob([response.data]);
-            const downloadUrl = window.URL.createObjectURL(blob);
-            
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.setAttribute('download', fileName);
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        const url = `${config.DOWNLOAD_URL}?file=${encodeURIComponent(fileName)}&folder_id=${encodeURIComponent(folderId)}`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-            window.URL.revokeObjectURL(downloadUrl);
-            
-            return true;
-        } catch (error) {
-            console.error('Download failed:', error);
-            notifyError("Download Error", `Encountered unexpected error when attempting to download file ${fileName}`)
-            return false;
-        }
-          
+        notifyInfo("File Download", `File ${fileName} download has started. Check your downloads`)
     }
 
     const downloadZip = async (folderId: string) => {

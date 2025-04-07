@@ -73,7 +73,7 @@ func SetupServer(jm *job.JobManager, dbCallback DatabaseCallback) (*http.Server,
 			}))
 
 	mux.HandleFunc("/download", 
-		auth.AuthMiddleware(
+		auth.RefreshAuthMiddleware(
 			func(w http.ResponseWriter, r *http.Request) {
 				downloader.DownloadHandler(w, r, jm)
 			}))
