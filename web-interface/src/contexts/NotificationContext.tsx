@@ -38,7 +38,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   
     return (
         <NotificationContext.Provider value={{ notifyInfo, notifySuccess, notifyError }}>
-            <ToastProvider placement="top-center" toastOffset={60} />
+            <ToastProvider placement="top-center" toastOffset={30} />
                 {children}
         </NotificationContext.Provider>
     );
