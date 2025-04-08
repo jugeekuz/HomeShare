@@ -15,15 +15,36 @@ export const FileDownloadProvider : React.FC<{children : ReactNode}> = ({childre
     const downloadFile = async (fileName: string, folderId: string) => {
         if (!files) return;
         
-        const url = `${config.DOWNLOAD_URL}?file=${encodeURIComponent(fileName)}&folder_id=${encodeURIComponent(folderId)}`;
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', fileName);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        try {
+            const params : FileDownloadParams = {
+                folder_id: folderId,
+                file: fileName
+            }
+            const response = await api.get(config.GET_DOWNLOAD_FILE_AVAILABLE_URL, {
+                params: params,
+            });
+            console.log(params)
+            console.log(response)
 
-        notifyInfo("File Download", `${fileName} has successfully started downloading`)
+            if (response.status !== 200) {
+                notifyError("Download Error", "Zip file is currently being processed, try again in a few moments")
+                return
+            }
+
+            const url = `${config.DOWNLOAD_URL}?file=${encodeURIComponent(fileName)}&folder_id=${encodeURIComponent(folderId)}`;
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+    
+            notifyInfo("File Download", `${fileName} has successfully started downloading`)
+        } catch (error) {
+            notifyError("Download Error", "Zip file is currently being processed, try again in a few moments")
+            return
+        }
+
     }
 
     const downloadZip = async (folderId: string) => {

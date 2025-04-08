@@ -8,6 +8,7 @@ const config = {
     SHARE_URL: 'https://kuza.gr/share',
     SHARING_POST_URL: 'https://kuza.gr/share-file',
     GET_SHARING_FILES_URL: 'https://kuza.gr/share-files',
+    GET_DOWNLOAD_FILE_AVAILABLE_URL: 'https://kuza.gr/download-available',
     DOWNLOAD_URL: 'https://kuza.gr/download'
 }
 
