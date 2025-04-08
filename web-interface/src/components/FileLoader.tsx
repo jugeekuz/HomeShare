@@ -50,7 +50,7 @@ const FileLoader : React.FC = () => {
                             to upload
                         </span>
                         <span className="font-linik text-gray-400 text-xs">
-                            Maximum supported file size 2GB
+                            Maximum supported file size 5GB
                         </span>
                     </div>
                 </div>
