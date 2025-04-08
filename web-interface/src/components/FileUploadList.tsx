@@ -36,7 +36,7 @@ const FileBox : React.FC<{fileId: string, refCallback: (el: ProgressBarRef | nul
             <div className="flex justify-center items-center w-7 h-7">
                 <UploadItem fileId={fileId}/>
             </div>
-            <div className="flex flex-col w-full px-3 justify-center">
+            <div className="flex flex-col w-full px-3 justify-center overflow-hidden text-nowrap">
                 <span className="font-linik text-[13px] text-gray-700 font-bold">
                     {files && files[fileId].fileMeta.fileName}{files && files[fileId].fileMeta.fileExtension}
                 </span>

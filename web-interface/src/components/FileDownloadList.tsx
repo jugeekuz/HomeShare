@@ -57,7 +57,7 @@ const FileBox : React.FC<{fileName: string}> = ({fileName}) => {
             <div className="flex justify-center items-center w-7 h-7">
                 <DownloadItem fileName={fileName}  />
             </div>
-            <div className="flex flex-col w-full px-3 justify-center">
+            <div className="flex flex-col w-full px-3 justify-center overflow-hidden text-nowrap">
                 <span className="font-linik text-[13px] text-gray-700 font-bold">
                     {fileName}
                 </span>
