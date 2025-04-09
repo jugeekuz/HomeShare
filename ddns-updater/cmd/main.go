@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 	"strconv"
-	
-	"ddns-updater/internal/aws"
+
 	"ddns-updater/internal/network"
+	"ddns-updater/internal/cloudflare"
 )
 
 func main() {
@@ -16,10 +16,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	hostedZoneID := os.Getenv("hostedZoneID")
-	recordName := os.Getenv("recordName")
+	apiToken := os.Getenv("CLOUDFLARE_API_TOKEN")
+	zoneId := os.Getenv("CLOUDFLARE_ZONE_ID")
+	recordName := os.Getenv("CLOUDFLARE_RECORD_NAME")
 
-	dnsIp, err := aws.GetARecord(hostedZoneID, recordName)
+	dnsIp, err := cloudflare.GetARecord(apiToken, zoneId, recordName)
 	if err != nil {
 		log.Fatalf("[DDNS-UPDATER] Error while querying public IP %s", err)
 	} else {
@@ -34,11 +35,11 @@ func main() {
 			log.Printf("[DDNS-UPDATER] Public IP is: %s\n", publicIp)
 			if dnsIp != publicIp {
 				log.Print("[DDNS-UPDATER] A records and public IP don't match, updating...")
-				err = aws.UpdateARecord(hostedZoneID, recordName, publicIp)
+				err = cloudflare.UpdateARecord(apiToken, zoneId, recordName, publicIp)
 				if err != nil {
 					fmt.Print(err)
 				} else {
-					log.Printf("[DDNS-UPDATER] Successfully updated A records in Route 53 to %s\n", dnsIp)
+					log.Printf("[DDNS-UPDATER] Successfully updated A records in Route 53 to %s\n", publicIp)
 				}
 				dnsIp = publicIp
 			}
