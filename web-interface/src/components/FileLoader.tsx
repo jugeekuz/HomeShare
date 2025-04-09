@@ -17,14 +17,7 @@ const FileLoader : React.FC = () => {
         multiple: true,
     });
 
-    const handleFileChange = (e : React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files == null ) return;
-        const selectedFiles : File[] = Array.from(e.target.files);
 
-        for (const file of selectedFiles) {
-            addFile(file);
-        }
-    }
     return (
         <div className="flex flex-col items-center justify-center w-full h-full" {...getRootProps()}>
             <input

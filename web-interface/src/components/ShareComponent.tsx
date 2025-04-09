@@ -1,8 +1,6 @@
-import React, {useEffect, useState} from 'react'
+import{useEffect, useState} from 'react'
 
 import { Input, DatePicker, Snippet, Select, SelectItem, Button, Tooltip, DateValue, Spinner } from '@heroui/react'
-import { FaLink } from "react-icons/fa6";
-import { FiExternalLink } from "react-icons/fi";
 import { LuLink } from "react-icons/lu";
 import { getLocalTimeZone, today } from "@internationalized/date";
 import { IoMdInformationCircle } from "react-icons/io";

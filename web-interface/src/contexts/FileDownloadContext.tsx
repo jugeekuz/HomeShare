@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, ReactNode, } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 
 import { FileDownloadContextType, FileDownloadItemStore, FileDownloadItem, FileDownloadParams } from '../types';
 import { useNotificationContext } from './NotificationContext';
@@ -8,7 +7,7 @@ import api from '../api/api';
 export const FileDownloadContext = createContext<FileDownloadContextType | undefined>(undefined);
 
 export const FileDownloadProvider : React.FC<{children : ReactNode}> = ({children}) => {
-    const { notifyError, notifyInfo, notifySuccess } = useNotificationContext();
+    const { notifyError, notifyInfo } = useNotificationContext();
 
     const [files, setFiles] = useState<FileDownloadItemStore | null>(null);
 

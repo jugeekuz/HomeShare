@@ -1,7 +1,5 @@
 import { useState, useCallback } from "react";
 import api from "../api/api";
-import { AxiosResponse } from "axios";
-
 const useDelete = (url: string): {
     success: boolean;
     loading: boolean;
@@ -18,7 +16,7 @@ const useDelete = (url: string): {
         setSuccess(false);
         
         try {
-            const response: AxiosResponse<any> = await api({
+            await api({
                 method: "DELETE",
                 url,
                 headers: {

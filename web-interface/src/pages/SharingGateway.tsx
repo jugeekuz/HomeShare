@@ -6,7 +6,6 @@ import { useSearchParams, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotificationContext } from '../contexts/NotificationContext';
 import LoadingPage from './LoadingPage';
-import SharingPage from './SharingPage';
 
 const setCookie = (name: string, value: string, minutes: number, domain?: string) => {
     const expires = new Date(Date.now() + minutes * 60 * 1000).toUTCString();
@@ -25,7 +24,7 @@ const SharingGateway: React.FC = () => {
     const [folderId, setFolderId] = useState<string | null>(null);
     const [folderName, setFolderName] = useState<string | null>(null);
     const [refreshToken, setRefreshToken] = useState<string | null>(null);
-    const [refreshLoading, setRefreshLoading] = useState<boolean>(true);
+    const [_, setRefreshLoading] = useState<boolean>(true);
 
     useEffect(() => {
         const folderId = searchParams.get("folder-id");
