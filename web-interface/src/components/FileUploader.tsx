@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@heroui/button';
 import { Spinner } from '@heroui/spinner';
-import { Progress } from '@heroui/progress';
 
 import { useSearchParams } from 'react-router-dom';
 import { useFileUploadContext } from '../contexts/FileUploadContext';
-import { useNotificationContext } from '../contexts/NotificationContext.tsx';
 
 const FileUploader : React.FC = () => {
     const { files, filesReady, filesUploading, uploadFiles } = useFileUploadContext();

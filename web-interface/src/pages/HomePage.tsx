@@ -1,6 +1,5 @@
 import React, {useState} from "react";
 import { Tabs, Tab, Card, CardBody, Tooltip } from "@heroui/react";
-import { useNavigate } from "react-router-dom";
 import UploadComponent from "../components/UploadComponent";
 import ShareComponent from "../components/ShareComponent";
 import { FaLink } from "react-icons/fa6";

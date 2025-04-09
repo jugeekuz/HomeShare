@@ -2,11 +2,10 @@ import React, {useEffect, useState} from 'react';
 
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import { IoMdDownload } from "react-icons/io";
-import { HiXMark } from "react-icons/hi2";
 import "react-perfect-scrollbar/dist/css/styles.css";
 import { ScrollShadow } from '@heroui/react';
 
-import { FileDownloadItem, FileIconType } from '../types';
+import { FileDownloadItem } from '../types';
 import { useSearchParams } from 'react-router-dom';
 import { useFileDownloadContext } from '../contexts/FileDownloadContext';
 import { useNotificationContext } from '../contexts/NotificationContext.tsx';

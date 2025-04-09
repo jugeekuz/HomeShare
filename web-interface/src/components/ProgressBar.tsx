@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle }  from 'react'
+import { useState, forwardRef, useImperativeHandle }  from 'react'
 import { Progress } from '@heroui/progress';
 
 import { ProgressBarProps, ProgressBarRef } from '../types';

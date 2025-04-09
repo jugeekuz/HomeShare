@@ -1,7 +1,6 @@
 import React from 'react';
 
 import PerfectScrollbar from 'react-perfect-scrollbar';
-import { IoMdDownload } from "react-icons/io";
 import { HiXMark } from "react-icons/hi2";
 import "react-perfect-scrollbar/dist/css/styles.css";
 import { ScrollShadow } from '@heroui/react';
@@ -87,7 +86,7 @@ const FileUploadList : React.FC = () => {
                         <div className="flex flex-col items-start w-full gap-[2px]">
                             {Object.entries(files).map(([fileId, _], index) => (
                                 <FileBox
-                                    key={fileId}
+                                    key={`${index}${fileId}`}
                                     fileId={fileId}
                                     refCallback={refCallback}
                                 />
