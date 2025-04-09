@@ -1,11 +1,15 @@
 package network
 
 import (
+	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"os"
 )
+
+type ApifyResponse struct {
+	PublicIp 		string `json:"ip"`
+}
 
 func GetPublicIp() (string, error) {
 	pingUrl := os.Getenv("PING_URL")
@@ -20,11 +24,10 @@ func GetPublicIp() (string, error) {
 		return "", errors.New("failed to fetch IP address")
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
+	var apifyResponse ApifyResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apifyResponse); err != nil {
 		return "", err
 	}
 
-	ip := string(body)
-	return ip, nil
+	return apifyResponse.PublicIp, nil
 }

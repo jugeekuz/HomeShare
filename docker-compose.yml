@@ -16,7 +16,7 @@ services:
       dockerfile: ../dockerfiles/ddns-updater.dockerfile
     environment:
       - PING_INTERVAL=60
-      - PING_URL=https://api.ipify.org?format=text
+      - PING_URL=https://api.ipify.org?format=json
     env_file:
       - env/aws.env
       - env/ddns-updater.env
