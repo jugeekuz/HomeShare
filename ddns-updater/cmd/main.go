@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	apiToken := os.Getenv("CLOUDFLARE_API_TOKEN")
+	apiToken := os.Getenv("CF_DNS_API_TOKEN")
 	zoneId := os.Getenv("CLOUDFLARE_ZONE_ID")
 	recordName := os.Getenv("CLOUDFLARE_RECORD_NAME")
 

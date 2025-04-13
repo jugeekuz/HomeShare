@@ -3,6 +3,7 @@ import AppRoutes from "./AppRoutes.tsx"
 import {HeroUIProvider} from "@heroui/react";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
 import { NotificationProvider } from "./contexts/NotificationContext.tsx";
+import bgImg from './assets/img/abstract-bg.png';
 const App : React.FC = () => {
 	return (
         <HeroUIProvider>
@@ -10,7 +11,7 @@ const App : React.FC = () => {
 		<div
 			className="relative items-center w-[100dvw] h-[100dvh] "
 			style={{
-                backgroundImage: "url('src/assets/img/abstract-bg.png')",
+                backgroundImage: `url(${bgImg})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat"

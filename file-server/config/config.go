@@ -31,6 +31,7 @@ type Secrets struct {
 	Jwt JWT
 }
 type Config struct {
+	Domain		 string
 	DomainOrigin string
 	UploadDir    string
 	SharingDir   string
@@ -50,7 +51,8 @@ func LoadConfig() *Config {
 		log.Fatalf("[FILE-SERVER] Invalid REFRESH_TOKEN_EXP value: %v", err)
 	}
 	return &Config{
-		DomainOrigin: getEnv("DOMAIN_ORIGIN", "https://kuza.gr"),
+		Domain:		  getEnv("DOMAIN", "api.homeshare.pro"),
+		DomainOrigin: getEnv("DOMAIN_ORIGIN", "https://homeshare.pro"),
 		UploadDir:    getEnv("UPLOAD_DIR", "uploads"),
 		SharingDir:   getEnv("SHARING_DIR", "temp"),
 		ChunksDir:    getEnv("CHUNKS_DIR", "chunks"),
