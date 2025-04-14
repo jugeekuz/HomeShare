@@ -95,6 +95,19 @@ func Authenticate(db *sql.DB, creds Credentials) (*User, error) {
 	return user, nil
 }
 
+func AuthenticateSharing(db *sql.DB, creds SharingCredentials) (*SharingUser, error) {
+	sharingUser, err := getSharingUser(db, creds.LinkUrl)
+	if err != nil {
+		return nil, err
+	}
+	hashedPassword := HashPassword(creds.OtpPassword, sharingUser.Salt)
+	if hashedPassword != sharingUser.OtpHash {
+		return nil, errors.New("invalid credentials")
+	}
+
+	return sharingUser, nil
+}
+
 func HasAccess(claims jwt.MapClaims, folderID, requiredAccess string) (bool, error) {
 	claimFolderID, ok := claims["folder_id"].(string)
 	if !ok {

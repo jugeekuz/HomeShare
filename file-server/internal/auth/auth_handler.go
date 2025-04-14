@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"fmt"
 	"database/sql"
 	"encoding/json"
 	"file-server/config"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -16,6 +16,11 @@ type Credentials struct {
 	Password string `json:"password"`
 }
 
+type SharingCredentials struct {
+	LinkUrl     string `json:"link_url"`
+	OtpPassword string `json:"otp"`
+}
+
 type TokenParameters struct {
 	UserId         string        `json:"user_id"`
 	ExpiryDuration time.Duration `json:"exp"`
@@ -25,6 +30,11 @@ type TokenParameters struct {
 
 type TokenResponse struct {
 	AccessToken string `json:"access_token"`
+}
+
+type SharingTokenResponse struct {
+	AccessToken string `json:"access_token"`
+	FolderId	string `json:"folder_id"`
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
@@ -143,6 +153,73 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	response := TokenResponse{
 		AccessToken: "",
 	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func SharingGatewayHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	cfg := config.LoadConfig()
+
+	var creds SharingCredentials
+	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+	sharingUser, err := AuthenticateSharing(db, creds)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Forbidden: %v", err), http.StatusForbidden)
+		return
+	}
+
+	// Convert UTC timestamp to time Duration
+	t, err := time.Parse(time.RFC3339, sharingUser.Expiration)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error parsing time: %v", err), http.StatusInternalServerError)
+		return
+	}
+	now := time.Now().UTC()
+
+	if now.After(t) {
+		http.Error(w, "Token has expired", http.StatusForbidden)
+		return
+	}
+
+	expiryDuration := t.Sub(now);
+
+	accessParams := &TokenParameters{
+		UserId:         sharingUser.FolderName,
+		ExpiryDuration: 5 * time.Minute,
+		FolderId:       sharingUser.FolderId,
+		Access:         sharingUser.Access,
+	}
+	refreshParams := &TokenParameters{
+		UserId:         sharingUser.FolderName,
+		ExpiryDuration: expiryDuration,
+		FolderId:       sharingUser.FolderId,
+		Access:         sharingUser.Access,
+	}
+
+	accessTokenString, refreshTokenString, err := GenerateTokens(accessParams, refreshParams)
+	if err != nil {
+		http.Error(w, "Issue generating tokens", http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshTokenString,
+		Expires:  time.Now().Add(cfg.Secrets.Jwt.RefreshExpiryDuration),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+		Path:     "/",
+	})
+
+	response := SharingTokenResponse{
+		AccessToken: accessTokenString,
+		FolderId: sharingUser.FolderId,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }

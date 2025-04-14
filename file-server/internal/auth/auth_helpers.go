@@ -13,6 +13,7 @@ import (
 
 	"file-server/config"
 
+	"github.com/google/uuid"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -23,6 +24,16 @@ type User struct {
 	PasswordHash string
 	FolderId     string
 	Access       string // r, w or rw
+}
+
+type SharingUser struct {
+	LinkUrl		string
+	FolderId	string
+	FolderName  string
+	Access		string
+	Salt		string
+	OtpHash		string
+	Expiration  string
 }
 
 type contextKey string
@@ -61,6 +72,25 @@ func InitializeUserTable(db *sql.DB) error {
 	return nil
 }
 
+func InitializeSharingUserTable(db *sql.DB) error {
+	createTableQuery := `
+		CREATE TABLE IF NOT EXISTS sharing_users (
+			link_url TEXT PRIMARY KEY,
+			folder_id TEXT NOT NULL,
+			folder_name TEXT NOT NULL,
+			salt TEXT NOT NULL,
+			otp_hash TEXT NOT NULL,
+			access TEXT NOT NULL CHECK (access IN ('r', 'w', 'rw')),
+			expiration TEXT NOT NULL
+		)
+	`
+	_, err := db.Exec(createTableQuery)
+	if err != nil {
+		return fmt.Errorf("error creating users table: %w", err)
+	}
+	return nil
+}
+
 func CreateAdminUser(db *sql.DB, username string, email string, password string) (User, error) {
 	var user User
 
@@ -87,6 +117,75 @@ func CreateAdminUser(db *sql.DB, username string, email string, password string)
 		return User{}, err
 	}
 	return user, nil
+}
+
+func CreateSharingUser(db *sql.DB, folderId string, folderName string, otpPass string, access string, expiration string) (SharingUser, error) {
+	var sharingUser SharingUser
+
+	createUserQuery := `
+		INSERT INTO sharing_users (link_url, folder_id, folder_name, salt, otp_hash, access, expiration)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (link_url) DO UPDATE 
+		SET link_url = EXCLUDED.link_url 
+		RETURNING link_url, folder_id, folder_name, salt, otp_hash, access, expiration;
+	`
+	salt, err := GenerateRandomSalt()
+	if err != nil {
+		return SharingUser{}, err
+	}
+
+	linkUrl := uuid.New().String()
+
+	sharingUser.LinkUrl = linkUrl
+	sharingUser.FolderId = folderId
+	sharingUser.FolderName = folderName
+	sharingUser.Salt = salt
+	sharingUser.OtpHash = HashPassword(otpPass, salt)
+	sharingUser.Access = access
+	sharingUser.Expiration = expiration
+
+	_, err = db.Exec(createUserQuery, sharingUser.LinkUrl, sharingUser.FolderId, sharingUser.FolderName, sharingUser.Salt, sharingUser.OtpHash, sharingUser.Access, sharingUser.Expiration)
+	if err != nil {
+		return SharingUser{}, err
+	}
+	return sharingUser, nil
+}
+
+func getSharingUser(db *sql.DB, linkUrl string) (*SharingUser, error) {
+	query := `
+		SELECT link_url, folder_id, folder_name, salt, otp_hash, access, expiration
+		FROM sharing_users
+		WHERE link_url = $1
+	`
+	row := db.QueryRow(query, linkUrl)
+	var user SharingUser
+	err := row.Scan(&user.LinkUrl, &user.FolderId, &user.FolderName, &user.Salt, &user.OtpHash, &user.Access, &user.Expiration)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+func deleteSharingUser(db *sql.DB, linkUrl string) error {
+	query := `DELETE FROM sharing_users WHERE link_url = $1`
+	result, err := db.Exec(query, linkUrl)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return errors.New("user not found")
+	}
+
+	return nil
 }
 
 func getUserByUsername(db *sql.DB, username string) (*User, error) {

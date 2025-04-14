@@ -1,13 +1,15 @@
 package sharing
 
 import (
+	"database/sql"
 	"encoding/json"
-	"strings"
-	"strconv"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
+	"fmt"
 
 	"file-server/config"
 	"file-server/internal/auth"
@@ -16,36 +18,36 @@ import (
 	"file-server/internal/job"
 	"file-server/internal/uploader"
 
-	"github.com/google/uuid"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type SharingDetails struct {
-	Access			string `json:"access"`
-	FolderName		string `json:"folder_name"`
-	ExpiryDuration	string `json:"expiry_duration"`
+	Access         string `json:"access"`
+	FolderName     string `json:"folder_name"`
+	OtpPass		   string `json:"otp"`
+	ExpirationDate string `json:"expiration_date"` 
 }
 
 type SharingFileParameters struct {
-	FolderId	string `json:"folder_id"`
+	FolderId string `json:"folder_id"`
 }
 
 type SharingResponse struct {
-	RefreshToken 	string `json:"refresh_token"`
-	FolderId 		string `json:"folder_id"`
+	LinkUrl 	string `json:"link_url"`
+	FolderId	string `json:"folder_id"`
 }
 
 type SharingFileItem struct {
-	FileName 		string `json:"file_name"`
-	FileExtension 	string `json:"file_extension"`
-	FileSize		string `json:"file_size"`
+	FileName      string `json:"file_name"`
+	FileExtension string `json:"file_extension"`
+	FileSize      string `json:"file_size"`
 }
 
 type SharingFilesResponse struct {
-	Files		[]SharingFileItem `json:"files"`
+	Files []SharingFileItem `json:"files"`
 }
 
-func SharingHandler(w http.ResponseWriter, r *http.Request) {
+func SharingHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	cfg := config.LoadConfig()
 
 	if r.Method != http.MethodPost {
@@ -72,33 +74,38 @@ func SharingHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to parse sharing parameters", http.StatusBadRequest)
 		return
 	}
-	expiryDuration, err := time.ParseDuration(sharingDetails.ExpiryDuration)
+
+	// Convert UTC timestamp to time Duration
+	exp, err := time.Parse(time.RFC3339, sharingDetails.ExpirationDate)
 	if err != nil {
-		http.Error(w, "Error while parsing duration", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Error parsing time: %v", err), http.StatusInternalServerError)
+		return
+	}
+	now := time.Now().UTC()
+
+	if now.After(exp) {
+		http.Error(w, "Token has expired", http.StatusForbidden)
 		return
 	}
 
+	expiryDuration := exp.Sub(now)
+
 	sharingFolderName := helpers.GenerateFolderName(expiryDuration)
-	finalSharingFolder := filepath.Join(cfg.SharingDir ,sharingFolderName)
+	finalSharingFolder := filepath.Join(cfg.SharingDir, sharingFolderName)
 	if err := os.MkdirAll(finalSharingFolder, os.ModePerm); err != nil {
 		http.Error(w, "Error while creating folder", http.StatusInternalServerError)
 		return
 	}
 
-	refreshParams := &auth.TokenParameters{
-		UserId:         uuid.New().String(),
-		ExpiryDuration: expiryDuration,
-		FolderId:       sharingFolderName,
-		Access:         sharingDetails.Access,
-	}
-	_, refreshToken, err := auth.GenerateTokens(refreshParams, refreshParams)
+	sharingUser, err := auth.CreateSharingUser(db, sharingFolderName, sharingDetails.FolderName, sharingDetails.OtpPass, sharingDetails.Access, sharingDetails.ExpirationDate)
 	if err != nil {
-		http.Error(w, "Error while generating tokens", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Error while creating user: %v", err), http.StatusInternalServerError)
 		return
 	}
+	linkUrl := sharingUser.LinkUrl
 
 	var sharingResponse SharingResponse
-	sharingResponse.RefreshToken = refreshToken
+	sharingResponse.LinkUrl = linkUrl
 	sharingResponse.FolderId = sharingFolderName
 	if err := json.NewEncoder(w).Encode(&sharingResponse); err != nil {
 		http.Error(w, "Error while generating response", http.StatusInternalServerError)
@@ -116,10 +123,10 @@ func AddSharingFilesHandler(w http.ResponseWriter, r *http.Request, jm *job.JobM
 	cfg := config.LoadConfig()
 
 	folderId := r.Header.Get("Folder-Id")
-    if folderId == "" {
-        http.Error(w, "Folder-Id header field is required", http.StatusBadRequest)
-        return
-    }
+	if folderId == "" {
+		http.Error(w, "Folder-Id header field is required", http.StatusBadRequest)
+		return
+	}
 	// Check if user has write access to the folder
 	claimsRaw := r.Context().Value(auth.ClaimsContextKey)
 	claims, ok := claimsRaw.(jwt.MapClaims)
@@ -127,7 +134,7 @@ func AddSharingFilesHandler(w http.ResponseWriter, r *http.Request, jm *job.JobM
 		http.Error(w, "Invalid token claims", http.StatusUnauthorized)
 		return
 	}
-	
+
 	fullFolderIdPath := filepath.Join(cfg.SharingDir, folderId)
 
 	canAccess, err := auth.HasAccess(claims, folderId, "w")
@@ -136,14 +143,14 @@ func AddSharingFilesHandler(w http.ResponseWriter, r *http.Request, jm *job.JobM
 		return
 	}
 
-    if _, err := os.Stat(fullFolderIdPath); err != nil {
-        if os.IsNotExist(err) {
-            http.Error(w, "Folder not found", http.StatusNotFound)
-            return
-        }
-        http.Error(w, "Error checking folder: "+err.Error(), http.StatusInternalServerError)
-        return
-    }
+	if _, err := os.Stat(fullFolderIdPath); err != nil {
+		if os.IsNotExist(err) {
+			http.Error(w, "Folder not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Error checking folder: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	uploader.UploadHandler(w, r, jm, fullFolderIdPath)
 
@@ -189,14 +196,14 @@ func GetSharingFilesHandler(w http.ResponseWriter, r *http.Request) {
 		if !entry.IsDir() {
 			fileName := entry.Name()
 			ext := filepath.Ext(fileName)
-			
+
 			fileInfo, err := entry.Info()
 			if err != nil {
 				continue
 			}
 
 			nameWithoutExt := strings.TrimSuffix(fileName, ext)
-			
+
 			sharingFilesResponse.Files = append(sharingFilesResponse.Files, SharingFileItem{
 				FileName:      nameWithoutExt,
 				FileExtension: ext,
@@ -204,6 +211,6 @@ func GetSharingFilesHandler(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	}
-	
+
 	json.NewEncoder(w).Encode(sharingFilesResponse)
 }

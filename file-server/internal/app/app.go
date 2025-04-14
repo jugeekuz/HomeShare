@@ -16,17 +16,20 @@ import (
 	"github.com/rs/cors"
 )
 
-type DatabaseCallback func() (*sql.DB, error) 
+type DatabaseCallback func() (*sql.DB, error)
 
 func InitDatabase() (*sql.DB, error) {
 	cfg := config.LoadConfig()
 
 	db, err := db.StartConn()
 	if err != nil {
-        return nil, fmt.Errorf("failed to connect to database: %w", err)
-    }
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
 	user := cfg.User
 	if err := auth.InitializeUserTable(db); err != nil {
+		return nil, err
+	}
+	if err := auth.InitializeSharingUserTable(db); err != nil {
 		return nil, err
 	}
 	if _, err := auth.CreateAdminUser(db, user.Username, user.Email, user.Password); err != nil {
@@ -44,10 +47,10 @@ func SetupServer(jm *job.JobManager, dbCallback DatabaseCallback) (*http.Server,
 	}
 
 	c := cors.New(cors.Options{
-		AllowedOrigins: 	[]string{cfg.DomainOrigin, "http://localhost:3001"},
-		AllowedMethods: 	[]string{http.MethodGet, http.MethodPost, http.MethodOptions},
-		AllowedHeaders:   	[]string{"Authorization", "Content-Type", "Set-Cookie", "Folder-Id"},
-    	AllowCredentials: 	true,
+		AllowedOrigins:   []string{cfg.DomainOrigin, "http://localhost:3001"},
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodOptions},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "Set-Cookie", "Folder-Id"},
+		AllowCredentials: true,
 	})
 
 	mux := http.NewServeMux()
@@ -65,39 +68,42 @@ func SetupServer(jm *job.JobManager, dbCallback DatabaseCallback) (*http.Server,
 		auth.LogoutHandler(w, r)
 	})
 
+	mux.HandleFunc("/auth-share", func(w http.ResponseWriter, r *http.Request) {
+		auth.SharingGatewayHandler(w, r, db)
+	})
+
 	// Authenticated endpoints
-	mux.HandleFunc("/upload", 
+	mux.HandleFunc("/upload",
 		auth.AuthMiddleware(
 			func(w http.ResponseWriter, r *http.Request) {
 				uploader.UploadHandler(w, r, jm, cfg.UploadDir)
 			}))
 
-	mux.HandleFunc("/download", 
+	mux.HandleFunc("/download",
 		auth.RefreshAuthMiddleware(
 			func(w http.ResponseWriter, r *http.Request) {
 				downloader.DownloadHandler(w, r, jm)
 			}))
-	
-	mux.HandleFunc("/download-available", 
+
+	mux.HandleFunc("/download-available",
 		auth.AuthMiddleware(
 			func(w http.ResponseWriter, r *http.Request) {
 				downloader.DownloadAvailableHandler(w, r, jm)
 			}))
 
-
-	mux.HandleFunc("/share", 
+	mux.HandleFunc("/share",
 		auth.AuthMiddleware(
 			func(w http.ResponseWriter, r *http.Request) {
-				sharing.SharingHandler(w, r)
+				sharing.SharingHandler(w, r, db)
 			}))
 
-	mux.HandleFunc("/share-file", 
+	mux.HandleFunc("/share-file",
 		auth.AuthMiddleware(
 			func(w http.ResponseWriter, r *http.Request) {
 				sharing.AddSharingFilesHandler(w, r, jm)
 			}))
 
-	mux.HandleFunc("/share-files", 
+	mux.HandleFunc("/share-files",
 		auth.AuthMiddleware(
 			func(w http.ResponseWriter, r *http.Request) {
 				sharing.GetSharingFilesHandler(w, r)
@@ -107,4 +113,4 @@ func SetupServer(jm *job.JobManager, dbCallback DatabaseCallback) (*http.Server,
 		Addr:    ":443",
 		Handler: c.Handler(mux),
 	}, nil
-} 
+}
