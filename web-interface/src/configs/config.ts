@@ -6,6 +6,7 @@ const config = {
     OTP_LENGTH: 6,
     BASE_URL: 'https://api.homeshare.pro',
     UPLOAD_URL: 'https://api.homeshare.pro/upload',
+    AUTH_SHARE_URL: 'https://api.homeshare.pro/auth-share',
     SHARE_URL: 'https://api.homeshare.pro/share',
     SHARING_POST_URL: 'https://api.homeshare.pro/share-file',
     GET_SHARING_FILES_URL: 'https://api.homeshare.pro/share-files',

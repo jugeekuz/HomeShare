@@ -57,7 +57,7 @@ const AppRoutes: React.FC = () => {
             }
         />
         <Route 
-            path="/sharing-gateway"
+            path="/sg-"
             element={
                 <PublicRoute>
                     <>

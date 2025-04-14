@@ -28,7 +28,7 @@ const FileBox : React.FC<{fileName: string}> = ({fileName}) => {
     }, [])
 
     useEffect(() => {
-        setFolderId(searchParams.get("folder-id"));
+        setFolderId(searchParams.get("fid"));
     }, [searchParams])
 
     const downloadCb = async () => {

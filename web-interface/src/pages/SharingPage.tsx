@@ -2,17 +2,17 @@ import React, {useState} from "react";
 import { Tabs, Tab, Card, CardBody } from "@heroui/react";
 
 import UploadComponent from "../components/UploadComponent";
+import { useAuth } from "../contexts/AuthContext.tsx";
 import { FileUploadProvider } from "../contexts/FileUploadContext.tsx";
 import { FileDownloadProvider } from "../contexts/FileDownloadContext.tsx";
 import { LuUpload, LuDownload } from "react-icons/lu";
 import DownloadComponent from "../components/DownloadComponent";
-import { useSearchParams } from "react-router-dom";
 
 type Key = string | number;
 
 const SharingPage: React.FC = () => {
     const [selectedTab, setSelectedTab] = useState<Key>("download");
-    const [searchParams] = useSearchParams();
+    const {claims} = useAuth();
     // 
     return (
         <div className="flex w-full h-full justify-center items-center">
@@ -45,7 +45,7 @@ const SharingPage: React.FC = () => {
                             <div className="flex flex-col justify-start items-center mt-1">
                                 <div className="flex justify-center items-center">
                                     <span className="font-brsonoma font-normal text-gray-950 text-md mr-1">
-                                        Sharing Folder <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">{searchParams.get("folder-name") || ""}</span>
+                                        Sharing Folder <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">{claims?.user_id || ""}</span>
                                     </span>
                                 </div>
                                 <span className="font-brsonoma font-light text-gray-500 text-xs">
@@ -67,7 +67,7 @@ const SharingPage: React.FC = () => {
                                 <div className="flex flex-col justify-start items-center mt-1">
                                     <div className="flex flex-col justify-center items-center mt-1 mb-1">
                                         <span className="font-brsonoma font-normal text-gray-950 text-md mr-1">
-                                             Sharing Folder <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">{searchParams.get("folder-name") || ""}</span>
+                                             Sharing Folder <span className="bg-secondary-gradient bg-clip-text text-transparent font-bold">{claims?.user_id || ""}</span>
                                         </span>
                                         <span className="font-brsonoma font-light text-gray-500 text-xs">
                                             Explore what others shared or upload your files

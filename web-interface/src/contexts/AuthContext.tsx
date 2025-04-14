@@ -20,9 +20,10 @@ export interface AuthContextType {
 }
 
 interface TokenClaims {
-    user_id:    string;
-    folder_id:  string;
-    access:     "r" | "w" | "rw"
+    user_id:        string;
+    folder_id:      string;
+    folder_name?:   string;
+    access:         "r" | "w" | "rw";
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,11 +46,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         setIsAuthenticated(!!token);
+        console.log(token)
         const tokenClaims = extractClaims(token);
         setClaims(tokenClaims);
         if (tokenClaims === null) {
             return;
         }
+        console.log(`tok ${JSON.stringify(tokenClaims)}`)
     }, [token])
 
     const decodeIdToken = (token: string | null): TokenClaims | null => {

@@ -28,7 +28,7 @@ const DownloadComponent: React.FC = () => {
     }, [files])
 
     useEffect(() => {
-        setFolderId(searchParams.get("folder-id"));
+        setFolderId(searchParams.get("fid"));
     }, [searchParams])
 
     useEffect(() => {
@@ -82,7 +82,7 @@ const DownloadComponent: React.FC = () => {
     return (
         <div className="flex flex-col justify-center items-center w-full h-full">
             
-            <div className="flex items-center justify-center w-[87%] mt-3 mb-2 border-dashed border-2 border-gray-300 rounded-lg px-2 pt-2 pb-1">
+            <div className="flex items-center justify-center w-[95%] mt-3 mb-2 border-dashed border-2 border-gray-300 rounded-lg px-2 pt-2 pb-1">
                 {   !empty ?
                         loading ?
                             <Spinner color="default"/>
@@ -103,7 +103,7 @@ const DownloadComponent: React.FC = () => {
                         </div>
                 }
             </div>
-            <div className="flex w-[90%]">
+            <div className="flex w-[95%]">
                 <Button 
                     isDisabled={empty || loading}
                     color="primary"
