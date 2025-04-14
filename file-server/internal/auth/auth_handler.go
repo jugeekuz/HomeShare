@@ -34,7 +34,7 @@ type TokenResponse struct {
 
 type SharingTokenResponse struct {
 	AccessToken string `json:"access_token"`
-	FolderId	string `json:"folder_id"`
+	FolderId    string `json:"folder_id"`
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
@@ -184,7 +184,7 @@ func SharingGatewayHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	expiryDuration := t.Sub(now);
+	expiryDuration := t.Sub(now)
 
 	accessParams := &TokenParameters{
 		UserId:         sharingUser.FolderName,
@@ -205,19 +205,22 @@ func SharingGatewayHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    refreshTokenString,
-		Expires:  time.Now().Add(cfg.Secrets.Jwt.RefreshExpiryDuration),
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
-		Path:     "/",
-	})
+	// Only set the cookie if the cookie the client has doesn't already have access rights
+	if !CookieHasAccess(r, sharingUser.FolderId, sharingUser.Access) { 
+		http.SetCookie(w, &http.Cookie{
+			Name:     "refresh_token",
+			Value:    refreshTokenString,
+			Expires:  time.Now().Add(cfg.Secrets.Jwt.RefreshExpiryDuration), //TODO : change this to expiry duration
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			Path:     "/",
+		})
+	}
 
 	response := SharingTokenResponse{
 		AccessToken: accessTokenString,
-		FolderId: sharingUser.FolderId,
+		FolderId:    sharingUser.FolderId,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

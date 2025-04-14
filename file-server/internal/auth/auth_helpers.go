@@ -13,8 +13,8 @@ import (
 
 	"file-server/config"
 
-	"github.com/google/uuid"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type User struct {
@@ -259,4 +259,39 @@ func RefreshAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), ClaimsContextKey, token.Claims)
 		next(w, r.WithContext(ctx))
 	})
+}
+
+func CookieHasAccess(r *http.Request, folderId string, access string) (bool) {
+	cfg := config.LoadConfig()
+	cookie, err := r.Cookie("refresh_token")
+	if err != nil {
+		return false
+	}
+
+	token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
+		return []byte(cfg.Secrets.Jwt.JwtSecret), nil
+	})
+
+	if err != nil || !token.Valid {
+		return false
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return false
+	}
+
+	_, ok1 := claims["user_id"].(string)
+	folderId, ok2 := claims["folder_id"].(string)
+	access, ok3 := claims["access"].(string)
+	if !ok1 || !ok2 || !ok3 {
+		return false
+	}
+
+	hasAccess, err := HasAccess(claims, folderId, access)
+	if (!hasAccess || err != nil) {
+		return false
+	}
+
+	return true
 }
