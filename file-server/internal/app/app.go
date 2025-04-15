@@ -12,6 +12,7 @@ import (
 	"file-server/internal/uploader"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/rs/cors"
 )
@@ -45,6 +46,17 @@ func SetupServer(jm *job.JobManager, dbCallback DatabaseCallback) (*http.Server,
 	if err != nil {
 		return nil, err
 	}
+	
+	go func(){
+		for {
+			err := auth.DeleteExpiredUsers(db)
+			if err != nil {
+				fmt.Printf("Received unexpected error when deleting expired users")
+			}
+			time.Sleep(5*time.Second)
+		}
+	}()
+	
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{cfg.DomainOrigin, "http://localhost:3001"},

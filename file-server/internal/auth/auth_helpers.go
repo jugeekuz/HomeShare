@@ -81,13 +81,21 @@ func InitializeSharingUserTable(db *sql.DB) error {
 			salt TEXT NOT NULL,
 			otp_hash TEXT NOT NULL,
 			access TEXT NOT NULL CHECK (access IN ('r', 'w', 'rw')),
-			expiration TEXT NOT NULL
+			expiration TIMESTAMPTZ NOT NULL
 		)
 	`
 	_, err := db.Exec(createTableQuery)
 	if err != nil {
-		return fmt.Errorf("error creating users table: %w", err)
+		return fmt.Errorf("error creating sharing_users table: %w", err)
 	}
+	createExpIndexQuery := `
+		CREATE INDEX IF NOT EXISTS idx_expiration ON sharing_users (expiration);
+	`
+	_, err = db.Exec(createExpIndexQuery)
+	if err != nil {
+		return fmt.Errorf("error creating sharing_users expiration index: %w", err)
+	}
+
 	return nil
 }
 
@@ -185,6 +193,24 @@ func deleteSharingUser(db *sql.DB, linkUrl string) error {
 		return errors.New("user not found")
 	}
 
+	return nil
+}
+
+func DeleteExpiredUsers(db *sql.DB) (error) {
+	query := "DELETE FROM sharing_users WHERE expiration < NOW()"
+
+	res, err := db.Exec(query)
+    if err != nil {
+        return err
+    }
+	
+	go func () {
+		rowsAffected, err := res.RowsAffected()
+		if err != nil {
+			fmt.Printf("Error retrieving affected rows: %v", err)
+		}
+		fmt.Printf("Deleted %d rows.\n", rowsAffected)
+		}()
 	return nil
 }
 

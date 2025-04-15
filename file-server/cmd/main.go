@@ -2,17 +2,17 @@
 package main
 
 import (
-	"log"
-	"fmt"
-	"os"
 	"crypto/tls"
-	"encoding/json"
 	"encoding/base64"
-	
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+
 	"time"
 
-	"file-server/internal/app"
 	"file-server/config"
+	"file-server/internal/app"
 	"file-server/internal/helpers"
 	"file-server/internal/job"
 )
@@ -77,10 +77,12 @@ func main() {
 	}
 
 	go func () {
-		_ = helpers.CleanupExpiredFolders(cfg.SharingDir)
-		time.Sleep(30 * time.Minute)
+		for {
+			_ = helpers.CleanupExpiredFolders(cfg.SharingDir)
+			time.Sleep(30 * time.Minute)
+		}
 	}()
-
+	
 	job_timeout := 45 * time.Second
 	jm := job.NewJobManager(job_timeout)
 
