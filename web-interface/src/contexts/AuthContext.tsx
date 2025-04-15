@@ -46,13 +46,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         setIsAuthenticated(!!token);
-        console.log(token)
         const tokenClaims = extractClaims(token);
         setClaims(tokenClaims);
         if (tokenClaims === null) {
             return;
         }
-        console.log(`tok ${JSON.stringify(tokenClaims)}`)
     }, [token])
 
     const decodeIdToken = (token: string | null): TokenClaims | null => {

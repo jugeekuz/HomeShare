@@ -36,8 +36,6 @@ const ShareComponent = () => {
         const parsedDate = date instanceof Date ? date : date.toDate('UTC');
         if (isNaN(parsedDate.getTime())) return;
 
-        console.log(`utc : ${parsedDate.toISOString()}`)
-
         const itemToPost : SharingDetails = {
             access: sharingOption,
             folder_name: folderName,
