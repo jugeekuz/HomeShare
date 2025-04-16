@@ -217,7 +217,7 @@ func TestSharingAuth(t *testing.T) {
 			t.Fatalf("Received unexpected error when creating request: %v", err)
 		}
 
-		SharingHandler(rr, req)
+		SharingGatewayHandler(rr, req)
 
 		if rr.Code != http.StatusForbidden {
 			t.Errorf("expected status 403 Forbidden, got: %d", rr.Code)
@@ -234,7 +234,7 @@ func TestSharingAuth(t *testing.T) {
 			t.Fatalf("Received unexpected error when creating request: %v", err)
 		}
 
-		SharingHandler(rr, req)
+		SharingGatewayHandler(rr, req)
 
 		if rr.Code != http.StatusForbidden {
 			t.Errorf("expected status 403 Forbidden, got: %d", rr.Code)
@@ -251,7 +251,7 @@ func TestSharingAuth(t *testing.T) {
 			t.Fatalf("Received unexpected error when creating request: %v", err)
 		}
 
-		SharingHandler(rr, req)
+		SharingGatewayHandler(rr, req)
 
 		if rr.Code != http.StatusOK {
 			t.Errorf("expected status 200 OK, got: %d", rr.Code)
@@ -270,7 +270,7 @@ func TestSharingSuccess(t *testing.T) {
 		t.Fatalf("Received unexpected error when creating request: %v", err)
 	}
 
-	SharingHandler(rr, req)
+	SharingGatewayHandler(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Errorf("expected status 200 OK, got: %d", rr.Code)
@@ -462,7 +462,7 @@ func TestAddSharingFilesMissingParameters(t *testing.T) {
 			t.Fatalf("Received unexpected error while creating sharing request: %v", err)
 		}
 
-		SharingHandler(rr, req)
+		SharingGatewayHandler(rr, req)
 
 		if rr.Code != http.StatusOK {
 			t.Errorf("expected status 200 OK, got: %d", rr.Code)
@@ -555,7 +555,7 @@ func TestAddSharingFilesSuccess(t *testing.T) {
 		t.Fatalf("Received unexpected error while creating sharing request: %v", err)
 	}
 
-	SharingHandler(rr, req)
+	SharingGatewayHandler(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Errorf("expected status 200 OK, got: %d", rr.Code)
@@ -745,7 +745,7 @@ func TestGetSharingFilesMissingParameters(t *testing.T) {
 		if strings.TrimSpace(rr.Body.String()) != "Missing folder_id parameter" {
 			t.Errorf("Expected `Missing folder_id parameter` body, got: %s", rr.Body.String())
 		}
-	
+
 	})
 }
 
@@ -791,7 +791,7 @@ func TestGetSharingFilesSuccess(t *testing.T) {
 		t.Fatalf("Received unexpected error while creating sharing request: %v", err)
 	}
 
-	SharingHandler(rr, req)
+	SharingGatewayHandler(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Errorf("expected status 200 OK, got: %d", rr.Code)

@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"os"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -16,6 +16,7 @@ import (
 	"github.com/golang-jwt/jwt"
 
 	"file-server/config"
+	"file-server/internal/helpers"
 )
 
 // Mock Database somehow
@@ -24,7 +25,7 @@ func initMockDb() (*sql.DB, sqlmock.Sqlmock, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	return db, mock, nil	
+	return db, mock, nil
 }
 
 func validateToken(tokenString string, expectedFolder string, expectedAccess string) error {
@@ -73,7 +74,9 @@ func validateToken(tokenString string, expectedFolder string, expectedAccess str
 }
 
 // --------------------------------------
-// 		  Suite Setup - Cleanup
+//
+//	Suite Setup - Cleanup
+//
 // --------------------------------------
 func TestMain(m *testing.M) {
 	cfg := config.LoadConfig()
@@ -112,9 +115,8 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-
 func TestLoginHandler(t *testing.T) {
-	t.Run("Login_Handler_Incorrect_Credentials", func (t *testing.T) {
+	t.Run("Login_Handler_Incorrect_Credentials", func(t *testing.T) {
 		// Initialize DB
 		db, mock, err := initMockDb()
 		if err != nil {
@@ -122,7 +124,7 @@ func TestLoginHandler(t *testing.T) {
 		}
 		defer db.Close()
 		rows := sqlmock.NewRows([]string{"username", "email", "salt", "password_hash", "folder", "access"}).
-						AddRow("johndoe", "johndoe@example.com", "somesalt", "passwordsomesalt", "/", "rw")
+			AddRow("johndoe", "johndoe@example.com", "somesalt", "passwordsomesalt", "/", "rw")
 
 		mock.ExpectQuery("SELECT username, email, salt, password_hash, folder, access FROM users WHERE username = \\$1").
 			WithArgs("johndoe").
@@ -153,7 +155,7 @@ func TestLoginHandler(t *testing.T) {
 		}
 	})
 
-	t.Run("Login_Handler_Success", func (t *testing.T) {
+	t.Run("Login_Handler_Success", func(t *testing.T) {
 		creds := Credentials{
 			Username: "johndoe",
 			Password: "somepassword",
@@ -166,14 +168,14 @@ func TestLoginHandler(t *testing.T) {
 		}
 		defer db.Close()
 
-		salt, err := GenerateRandomSalt()
+		salt, err := helpers.GenerateRandomSalt()
 		if err != nil {
-			t.Fatalf("Encountered unexpected error while generating salt: %v",err)
+			t.Fatalf("Encountered unexpected error while generating salt: %v", err)
 		}
-		hash := HashPassword(creds.Password, salt)
+		hash := helpers.HashPassword(creds.Password, salt)
 
 		rows := sqlmock.NewRows([]string{"username", "email", "salt", "password_hash", "folder", "access"}).
-						AddRow("johndoe", "johndoe@example.com", salt, hash, "/", "rw")
+			AddRow("johndoe", "johndoe@example.com", salt, hash, "/", "rw")
 
 		mock.ExpectQuery("SELECT username, email, salt, password_hash, folder, access FROM users WHERE username = \\$1").
 			WithArgs("johndoe").
@@ -202,7 +204,7 @@ func TestLoginHandler(t *testing.T) {
 		if respData.AccessToken == "" {
 			t.Error("access token not found in response body")
 		}
-		
+
 		if err := validateToken(respData.AccessToken, "/", "rw"); err != nil {
 			t.Errorf("Unexpected error when validating access token: %v", err)
 		}
@@ -224,13 +226,13 @@ func TestLoginHandler(t *testing.T) {
 				t.Errorf("Unexpected error when validating refresh token: %v", err)
 			}
 		}
-				
+
 	})
 }
 
 func TestRefreshHandler(t *testing.T) {
 	cfg := config.LoadConfig()
-	t.Run("Refresh_Handler_Missing_Cookie", func (t *testing.T) {
+	t.Run("Refresh_Handler_Missing_Cookie", func(t *testing.T) {
 		rr := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodPost, "/refresh", nil)
 
@@ -248,12 +250,12 @@ func TestRefreshHandler(t *testing.T) {
 			t.Errorf("Received access token eventhough refresh token wasn't provided: %s", respData.AccessToken)
 		}
 	})
-	t.Run("Refresh_Handler_Invalid_Token", func (t *testing.T) {
+	t.Run("Refresh_Handler_Invalid_Token", func(t *testing.T) {
 		rr := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodPost, "/refresh", nil)
 
 		refreshParams := TokenParameters{
-			UserId: 		"johndoe",
+			UserId:         "johndoe",
 			ExpiryDuration: cfg.Secrets.Jwt.RefreshExpiryDuration,
 			FolderId:       "/",
 			Access:         "rw",
@@ -282,7 +284,7 @@ func TestRefreshHandler(t *testing.T) {
 		})
 
 		RefreshHandler(rr, req)
-		
+
 		if rr.Code != http.StatusUnauthorized {
 			t.Errorf("Expected code 401 Unauthorized, received: %d", rr.Code)
 		}
@@ -295,12 +297,12 @@ func TestRefreshHandler(t *testing.T) {
 			t.Errorf("Received access token eventhough refresh token wasn't provided: %s", respData.AccessToken)
 		}
 	})
-	t.Run("Refresh_Handler_Expired_Token", func (t *testing.T) {
+	t.Run("Refresh_Handler_Expired_Token", func(t *testing.T) {
 		rr := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodPost, "/refresh", nil)
 
 		refreshParams := TokenParameters{
-			UserId: 		"johndoe",
+			UserId:         "johndoe",
 			ExpiryDuration: 0,
 			FolderId:       "/",
 			Access:         "rw",
@@ -321,7 +323,7 @@ func TestRefreshHandler(t *testing.T) {
 		})
 
 		RefreshHandler(rr, req)
-		
+
 		if rr.Code != http.StatusUnauthorized {
 			t.Errorf("Expected code 401 Unauthorized, received: %d", rr.Code)
 		}
@@ -334,12 +336,12 @@ func TestRefreshHandler(t *testing.T) {
 			t.Errorf("Received access token eventhough refresh token wasn't provided: %s", respData.AccessToken)
 		}
 	})
-	t.Run("Refresh_Handler_Success", func (t *testing.T) {
+	t.Run("Refresh_Handler_Success", func(t *testing.T) {
 		rr := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodPost, "/refresh", nil)
 
 		refreshParams := TokenParameters{
-			UserId: 		"johndoe",
+			UserId:         "johndoe",
 			ExpiryDuration: cfg.Secrets.Jwt.RefreshExpiryDuration,
 			FolderId:       "/",
 			Access:         "rw",
@@ -364,7 +366,7 @@ func TestRefreshHandler(t *testing.T) {
 		if rr.Code != http.StatusOK {
 			t.Errorf("Expected status 200 OK, got: %d", rr.Code)
 		}
-		
+
 		respData := TokenResponse{}
 		if err := json.Unmarshal(rr.Body.Bytes(), &respData); err != nil {
 			t.Fatalf("error unmarshalling response body: %v", err)
@@ -372,7 +374,7 @@ func TestRefreshHandler(t *testing.T) {
 		if respData.AccessToken == "" {
 			t.Error("access token not found in response body")
 		}
-		
+
 		if err := validateToken(respData.AccessToken, "/", "rw"); err != nil {
 			t.Errorf("Unexpected error when validating access token: %v", err)
 		}
@@ -380,7 +382,7 @@ func TestRefreshHandler(t *testing.T) {
 }
 
 func TestLogoutHandler(t *testing.T) {
-	t.Run("Logout_Handler_Success", func (t *testing.T) {
+	t.Run("Logout_Handler_Success", func(t *testing.T) {
 		req := httptest.NewRequest("POST", "/logout", nil)
 		rr := httptest.NewRecorder()
 

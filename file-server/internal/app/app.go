@@ -10,6 +10,7 @@ import (
 	"file-server/internal/job"
 	"file-server/internal/sharing"
 	"file-server/internal/uploader"
+	"file-server/internal/repositories"
 	"fmt"
 	"net/http"
 	"time"
@@ -27,13 +28,13 @@ func InitDatabase() (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 	user := cfg.User
-	if err := auth.InitializeUserTable(db); err != nil {
+	if err := repositories.InitializeUserTable(db); err != nil {
 		return nil, err
 	}
-	if err := auth.InitializeSharingUserTable(db); err != nil {
+	if err := repositories.InitializeSharingUserTable(db); err != nil {
 		return nil, err
 	}
-	if _, err := auth.CreateAdminUser(db, user.Username, user.Email, user.Password); err != nil {
+	if _, err := repositories.CreateAdminUser(db, user.Username, user.Email, user.Password); err != nil {
 		return nil, err
 	}
 	return db, nil
@@ -49,7 +50,7 @@ func SetupServer(jm *job.JobManager, dbCallback DatabaseCallback) (*http.Server,
 	
 	go func(){
 		for {
-			err := auth.DeleteExpiredUsers(db)
+			err := repositories.DeleteExpiredUsers(db)
 			if err != nil {
 				fmt.Printf("Received unexpected error when deleting expired users")
 			}

@@ -14,9 +14,9 @@ import (
 	"file-server/config"
 	"file-server/internal/auth"
 	"file-server/internal/helpers"
-
 	"file-server/internal/job"
 	"file-server/internal/uploader"
+	"file-server/internal/repositories"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -97,7 +97,7 @@ func SharingHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	sharingUser, err := auth.CreateSharingUser(db, sharingFolderName, sharingDetails.FolderName, sharingDetails.OtpPass, sharingDetails.Access, sharingDetails.ExpirationDate)
+	sharingUser, err := repositories.CreateSharingUser(db, sharingFolderName, sharingDetails.FolderName, sharingDetails.OtpPass, sharingDetails.Access, sharingDetails.ExpirationDate)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error while creating user: %v", err), http.StatusInternalServerError)
 		return
