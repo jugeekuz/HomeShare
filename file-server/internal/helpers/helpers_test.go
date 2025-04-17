@@ -10,9 +10,11 @@ import (
 	"time"
 
 	"file-server/internal/job"
+
+	"github.com/google/uuid"
 )
 
-var TestFolder string = GenerateFolderName(0 * time.Second)
+var TestFolder string = GenerateFolderName(0 * time.Second, uuid.New().String())
 
 func TestMain(m *testing.M) {
 	if err := os.MkdirAll(TestFolder, os.ModePerm); err != nil {

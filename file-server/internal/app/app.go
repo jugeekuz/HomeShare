@@ -11,11 +11,13 @@ import (
 	"file-server/internal/sharing"
 	"file-server/internal/uploader"
 	"file-server/internal/repositories"
+	"file-server/internal/helpers"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/rs/cors"
+	"github.com/google/uuid"
 )
 
 type DatabaseCallback func() (*sql.DB, error)
@@ -107,7 +109,12 @@ func SetupServer(jm *job.JobManager, dbCallback DatabaseCallback) (*http.Server,
 	mux.HandleFunc("/share",
 		auth.AuthMiddleware(
 			func(w http.ResponseWriter, r *http.Request) {
-				sharing.SharingHandler(w, r, db)
+				salt, err := helpers.GenerateRandomSalt()
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Error while creating user: %v", err), http.StatusInternalServerError)
+					return
+				}
+				sharing.SharingHandler(w, r, db, salt, uuid.New().String())
 			}))
 
 	mux.HandleFunc("/share-file",

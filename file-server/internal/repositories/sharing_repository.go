@@ -5,8 +5,6 @@ import (
 	"errors"
 	"database/sql"
 
-	"github.com/google/uuid"
-
 	"file-server/internal/helpers"
 	"file-server/internal/models"
 )
@@ -38,7 +36,7 @@ func InitializeSharingUserTable(db *sql.DB) error {
 	return nil
 }
 
-func CreateSharingUser(db *sql.DB, folderId string, folderName string, otpPass string, access string, expiration string) (models.SharingUser, error) {
+func CreateSharingUser(db *sql.DB, linkUrl string, folderId string, folderName string, salt string, otpPass string, access string, expiration string) (models.SharingUser, error) {
 	var sharingUser models.SharingUser
 
 	createUserQuery := `
@@ -48,12 +46,6 @@ func CreateSharingUser(db *sql.DB, folderId string, folderName string, otpPass s
 		SET link_url = EXCLUDED.link_url 
 		RETURNING link_url, folder_id, folder_name, salt, otp_hash, access, expiration;
 	`
-	salt, err := helpers.GenerateRandomSalt()
-	if err != nil {
-		return models.SharingUser{}, err
-	}
-
-	linkUrl := uuid.New().String()
 
 	sharingUser.LinkUrl = linkUrl
 	sharingUser.FolderId = folderId
@@ -63,7 +55,7 @@ func CreateSharingUser(db *sql.DB, folderId string, folderName string, otpPass s
 	sharingUser.Access = access
 	sharingUser.Expiration = expiration
 
-	_, err = db.Exec(createUserQuery, sharingUser.LinkUrl, sharingUser.FolderId, sharingUser.FolderName, sharingUser.Salt, sharingUser.OtpHash, sharingUser.Access, sharingUser.Expiration)
+	_, err := db.Exec(createUserQuery, sharingUser.LinkUrl, sharingUser.FolderId, sharingUser.FolderName, sharingUser.Salt, sharingUser.OtpHash, sharingUser.Access, sharingUser.Expiration)
 	if err != nil {
 		return models.SharingUser{}, err
 	}

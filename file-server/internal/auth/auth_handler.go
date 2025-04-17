@@ -158,7 +158,6 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SharingGatewayHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-	cfg := config.LoadConfig()
 
 	var creds SharingCredentials
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
@@ -210,7 +209,7 @@ func SharingGatewayHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.SetCookie(w, &http.Cookie{
 			Name:     "refresh_token",
 			Value:    refreshTokenString,
-			Expires:  time.Now().Add(cfg.Secrets.Jwt.RefreshExpiryDuration), //TODO : change this to expiry duration
+			Expires:  time.Now().Add(expiryDuration),
 			HttpOnly: true,
 			Secure:   true,
 			SameSite: http.SameSiteNoneMode,
