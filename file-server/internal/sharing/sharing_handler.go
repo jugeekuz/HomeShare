@@ -47,7 +47,7 @@ type SharingFilesResponse struct {
 	Files []SharingFileItem `json:"files"`
 }
 
-func SharingHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func SharingHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, salt string, linkUrl string) {
 	cfg := config.LoadConfig()
 
 	if r.Method != http.MethodPost {
@@ -81,7 +81,7 @@ func SharingHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, fmt.Sprintf("Error parsing time: %v", err), http.StatusInternalServerError)
 		return
 	}
-	now := time.Now().UTC()
+	now := time.Now().UTC().Truncate(time.Second)
 
 	if now.After(exp) {
 		http.Error(w, "Token has expired", http.StatusForbidden)
@@ -89,24 +89,23 @@ func SharingHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 
 	expiryDuration := exp.Sub(now)
-
-	sharingFolderName := helpers.GenerateFolderName(expiryDuration)
-	finalSharingFolder := filepath.Join(cfg.SharingDir, sharingFolderName)
+	
+	sharingFolderId := helpers.GenerateFolderName(expiryDuration, linkUrl) // Will be the name under which folder is saved under
+	finalSharingFolder := filepath.Join(cfg.SharingDir, sharingFolderId)
 	if err := os.MkdirAll(finalSharingFolder, os.ModePerm); err != nil {
 		http.Error(w, "Error while creating folder", http.StatusInternalServerError)
 		return
 	}
 
-	sharingUser, err := repositories.CreateSharingUser(db, sharingFolderName, sharingDetails.FolderName, sharingDetails.OtpPass, sharingDetails.Access, sharingDetails.ExpirationDate)
+	_, err = repositories.CreateSharingUser(db, linkUrl, sharingFolderId, sharingDetails.FolderName, salt, sharingDetails.OtpPass, sharingDetails.Access, sharingDetails.ExpirationDate)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error while creating user: %v", err), http.StatusInternalServerError)
 		return
 	}
-	linkUrl := sharingUser.LinkUrl
 
 	var sharingResponse SharingResponse
 	sharingResponse.LinkUrl = linkUrl
-	sharingResponse.FolderId = sharingFolderName
+	sharingResponse.FolderId = sharingFolderId
 	if err := json.NewEncoder(w).Encode(&sharingResponse); err != nil {
 		http.Error(w, "Error while generating response", http.StatusInternalServerError)
 		return
