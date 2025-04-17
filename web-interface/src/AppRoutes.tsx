@@ -1,5 +1,5 @@
-import React from 'react';
-import { Route, Routes, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 
 import NavBar from './components/NavBar';
@@ -13,9 +13,8 @@ interface PrivateRouteProps {
     children: React.ReactNode;
 }
 
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
+const PrivateSharingRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     const { isAuthenticated, refreshLoading } = useAuth();
-
     return<> 
         {
         refreshLoading ? <LoadingPage/>
@@ -25,6 +24,28 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
         }
     </>
 };
+
+const PrivateAdminRoute: React.FC<PrivateRouteProps> = ({ children }) => {
+    const { isAuthenticated, isAdmin, refreshLoading } = useAuth();
+    const navigate = useNavigate();
+    useEffect(() => {
+        if (refreshLoading) return;
+        if (!isAdmin) {
+            navigate(-1);
+        }
+    },[isAdmin, refreshLoading])
+    if (refreshLoading) {
+      return <LoadingPage />;
+    }
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }
+    if (!isAdmin) {
+      // declarative redirect
+      return <Navigate to=".." replace />;   // or to="/some‑fallback"
+    }
+    return <>{children}</>;
+  };
 
 interface PublicRouteProps {
     children: React.ReactNode;
@@ -40,12 +61,12 @@ const AppRoutes: React.FC = () => {
         <Route
             path="/"
             element={
-            <PrivateRoute>
+            <PrivateAdminRoute>
                 <>
                 <NavBar />
                 <HomePage />
                 </>
-            </PrivateRoute>
+            </PrivateAdminRoute>
             }
         />
         <Route
@@ -69,12 +90,12 @@ const AppRoutes: React.FC = () => {
         <Route
             path="/sharing"
             element={
-            <PrivateRoute>
+            <PrivateSharingRoute>
                 <>
                 <NavBar />
                 <SharingPage />
                 </>
-            </PrivateRoute>
+            </PrivateSharingRoute>
             }
         />
         <Route
@@ -90,12 +111,12 @@ const AppRoutes: React.FC = () => {
         <Route
             path="*"
             element={
-            <PrivateRoute>
+            <PrivateAdminRoute>
                 <>
                 <NavBar />
                 <HomePage />
                 </>
-            </PrivateRoute>
+            </PrivateAdminRoute>
             }
         />
         </Routes>
