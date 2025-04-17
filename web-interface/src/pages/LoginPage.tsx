@@ -5,6 +5,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from '../contexts/AuthContext';
 import { authenticate } from "../services/authenticate";
 import { useNotificationContext } from '../contexts/NotificationContext';
+import logoImg from "../assets/img/logo.png"
 const LoginPage = () => {
     const { notifyError } = useNotificationContext();
     const { setToken, isAuthenticated } = useAuth();
@@ -23,7 +24,9 @@ const LoginPage = () => {
             })
             .catch((error) => {
                 setLoginLoading(false);
-                return error.response ? notifyError("Authentication Failure", error.response.data) : notifyError("Authentication Failure", error.response.message);
+                
+                const errorMessage = error.response?.data?.message || error.message || "An unexpected error occurred.";
+                notifyError("Authentication Failure", errorMessage);
             })
     }
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -40,10 +43,11 @@ const LoginPage = () => {
                         <CardBody className="justify-center items-center pb-8">
                             <div className="flex flex-col w-full justify-center items-center">
                                 <div className="flex flex-col justify-center items-center w-64 my-3">
-                                    <span className="font-signatra bg-secondary-gradient bg-clip-text text-transparent font-medium text-[3rem] ">
+                                    {/* <span className="font-signatra bg-black  bg-clip-text text-transparent font-medium text-[3.2rem] ">
                                         HomeShare
-                                    </span>
-                                    <span className="text-xs text-gray-500 -mt-3">
+                                    </span> */}
+                                    <img src={logoImg} alt="" className="w-[11.3rem] -ml-6 my-2" />
+                                    <span className="text-xs text-gray-500 -mt-2">
                                         Log in to your account to continue
                                     </span>
                                 </div>
