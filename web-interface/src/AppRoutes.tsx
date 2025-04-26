@@ -25,26 +25,16 @@ const PrivateSharingRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     </>
 };
 
+
 const PrivateAdminRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     const { isAuthenticated, isAdmin, refreshLoading } = useAuth();
-    const navigate = useNavigate();
-    useEffect(() => {
-        if (refreshLoading) return;
-        if (!isAdmin) {
-            navigate(-1);
-        }
-    },[isAdmin, refreshLoading])
-    if (refreshLoading) {
-      return <LoadingPage />;
-    }
-    if (!isAuthenticated) {
-      return <Navigate to="/login" replace />;
-    }
-    if (!isAdmin) {
-      // declarative redirect
-      return <Navigate to=".." replace />;   // or to="/some‑fallback"
-    }
-    return <>{children}</>;
+    return <>{
+        refreshLoading ?
+            <LoadingPage />
+        : (isAuthenticated && isAdmin?
+            <>{children}</>
+            :<Navigate to="/login" />)
+    }</>
   };
 
 interface PublicRouteProps {

@@ -8,7 +8,7 @@ import { useNotificationContext } from '../contexts/NotificationContext';
 import logoImg from "../assets/img/logo.png"
 const LoginPage = () => {
     const { notifyError } = useNotificationContext();
-    const { setToken, isAuthenticated } = useAuth();
+    const { setToken, isAuthenticated, isAdmin } = useAuth();
     const [email, setEmail] = useState('');
     const [loginLoading, setLoginLoading] = useState(false);
     const [password, setPassword] = useState('');
@@ -35,7 +35,7 @@ const LoginPage = () => {
     };
 
     return (
-        isAuthenticated 
+        isAuthenticated && isAdmin
             ? <Navigate to="/"/> 
             :    <div className="flex w-full h-full justify-center items-center">
                     {/* Rectangle */}

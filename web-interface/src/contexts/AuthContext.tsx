@@ -14,6 +14,7 @@ export interface AuthContextType {
     token:              string | null;
     claims:             TokenClaims | null;
     setToken:           (token: string | null) => void;
+    isAdmin:            boolean;
     logout :            () => void;
     isAuthenticated:    boolean;
     isAdmin:            boolean;
@@ -50,8 +51,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsAuthenticated(!!token);
         const tokenClaims = extractClaims(token);
         setClaims(tokenClaims);
-        if (tokenClaims === null) {
-            return;
+
+        if (!tokenClaims || !tokenClaims?.folder_id || !tokenClaims?.access) return;
+        
+        if (tokenClaims.folder_id === "/" && tokenClaims.access === "rw") {
+            setIsAdmin(true);
+        } else {
+            setIsAdmin(false);
         }
     }, [token])
 
