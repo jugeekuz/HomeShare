@@ -141,7 +141,7 @@ func ParseForm(w http.ResponseWriter, r *http.Request) (ChunkMeta, Chunk, error)
 		return ChunkMeta{}, Chunk{}, fmt.Errorf("invalid file name format: %s", meta.FileName)
 	}
 
-	fileExtensionRegex := regexp.MustCompile(`^\.(jpe?g|png|gif|bmp|tiff?|webp|mp4|mkv|mov|avi|flv|wmv|txt)$`)
+	fileExtensionRegex := regexp.MustCompile(`^\.(jpe?g|png|pdf|docx|doc|xlsx|xls|pptx|ppt|txt|csv|rtf|odt|ods|odp|heic|webp|gif|bmp|tiff?|mp3|wav|m4a|aac|flac|ogg|mp4|m4v|mov|mkv|avi|flv|wmv|webm|zip|rar|7z|tar|gz|iso|epub|azw3|mobi|ics|vcf|psd|ai|svg|html|css|js|json|xml)$`)
 	if !fileExtensionRegex.MatchString(strings.ToLower(meta.FileExtension)) {
 		return ChunkMeta{}, Chunk{}, fmt.Errorf("invalid file extension: %s", meta.FileExtension)
 	}
