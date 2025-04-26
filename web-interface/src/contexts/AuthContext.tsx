@@ -17,7 +17,6 @@ export interface AuthContextType {
     isAdmin:            boolean;
     logout :            () => void;
     isAuthenticated:    boolean;
-    isAdmin:            boolean;
     refreshLoading:     boolean;
 }
 
@@ -108,7 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     setIsAdmin(true);
                 }
             })
-            .catch((error) => {
+            .catch((_) => {
                 setToken(null)
             })
             .finally(() => setRefreshLoading(false));
