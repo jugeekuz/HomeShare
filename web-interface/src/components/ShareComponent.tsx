@@ -197,7 +197,7 @@ const ShareComponent = () => {
 
             {/* Link Creation & Copy Snippet */}
             <div className="flex flex-row justify-center items-center w-[21.8rem] mt-6 gap-5">
-                <div className="flex relative w-2/5 h-[2.6rem]">
+                <div className={`flex relative ${linkUrl ? "w-3/5" : "w-[45%]"} max-w-[50%] h-[2.6rem]`}>
                     <Snippet 
                         symbol="🔗"
                         variant="bordered"
@@ -219,7 +219,7 @@ const ShareComponent = () => {
                         </div>
                     )}
                 </div>
-                <div className="flex w-3/5">
+                <div className={`flex ${linkUrl ? "w-2/5" : "w-[55%]"}`}>
                     <Button 
                         aria-label='Share'
                         isDisabled={linkUrl !== null}
