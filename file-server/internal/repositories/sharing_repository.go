@@ -102,17 +102,17 @@ func DeleteSharingUser(db *sql.DB, linkUrl string) error {
 func DeleteExpiredUsers(db *sql.DB) error {
 	query := "DELETE FROM sharing_users WHERE expiration < NOW()"
 
-	res, err := db.Exec(query)
+	_, err := db.Exec(query)
 	if err != nil {
 		return err
 	}
 
-	go func() {
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			fmt.Printf("Error retrieving affected rows: %v", err)
-		}
-		fmt.Printf("Deleted %d rows.\n", rowsAffected)
-	}()
+	// go func() {
+	// 	rowsAffected, err := res.RowsAffected()
+	// 	if err != nil {
+	// 		fmt.Printf("Error retrieving affected rows: %v", err)
+	// 	}
+	// 	fmt.Printf("Deleted %d rows.\n", rowsAffected)
+	// }()
 	return nil
 }
