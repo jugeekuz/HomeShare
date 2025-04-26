@@ -26,7 +26,7 @@ const NavBar : React.FC = () => {
             }}
             position='sticky'
         >
-            <NavbarBrand as="div" className='-ml-6 sm:ml-0'>
+            <NavbarBrand as="div" className='-ml-9 sm:ml-0'>
                 <div
                     onClick={() => navigate("/")} 
                     className="flex justify-start items-center w-64 cursor-pointer">
