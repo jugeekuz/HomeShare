@@ -51,8 +51,8 @@ func LoadConfig() *Config {
 		log.Fatalf("[FILE-SERVER] Invalid REFRESH_TOKEN_EXP value: %v", err)
 	}
 	return &Config{
-		Domain:		  getEnv("DOMAIN", "api.homeshare.pro"),
-		DomainOrigin: getEnv("DOMAIN_ORIGIN", "https://homeshare.pro"),
+		Domain:		  getEnv("DOMAIN", "mydomain.com"),
+		DomainOrigin: getEnv("DOMAIN_ORIGIN", "https://mydomain.com"),
 		UploadDir:    getEnv("UPLOAD_DIR", "uploads"),
 		SharingDir:   getEnv("SHARING_DIR", "temp"),
 		ChunksDir:    getEnv("CHUNKS_DIR", "chunks"),

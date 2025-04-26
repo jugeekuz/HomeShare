@@ -76,6 +76,8 @@ services:
     build:
       context: ./web-interface
       dockerfile: ../dockerfiles/web-interface.dockerfile
+      args:
+        VITE_DOMAIN: ${DOMAIN}
     networks:
       - web
     depends_on:
