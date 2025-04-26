@@ -14,6 +14,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 
 	"file-server/config"
 	"file-server/internal/helpers"
@@ -420,4 +421,176 @@ func TestLogoutHandler(t *testing.T) {
 			t.Errorf("expected AccessToken to be empty, got '%s'", tokenResponse.AccessToken)
 		}
 	})
+}
+
+func TestSharingGatewayWrongArguments(t *testing.T) {
+	
+	url := "/auth-share"
+	expirationDate := time.Now().Add(48 * time.Hour).UTC().Truncate(time.Second)
+	expiration := expirationDate.Format(time.RFC3339)
+	otpPass := "123456"
+	linkUrl := uuid.New().String()
+	expiryDuration := expirationDate.Sub(time.Now().UTC().Truncate(time.Second))
+	sharingFolderId := helpers.GenerateFolderName(expiryDuration, linkUrl)
+	folderName := "someFolderName"
+	access := "rw"
+	salt, err := helpers.GenerateRandomSalt()
+	if err != nil {
+		t.Errorf("Received unexpected error when generating random salt: %v", err)
+	}
+
+	db, mock, err := initMockDb()
+	if err != nil {
+		t.Fatalf("Received unexpected error when initializing mock db: %v", err)
+	}
+	defer db.Close()
+
+	t.Run("Non_Existent_LinkUrl", func(t *testing.T) {
+		wrongLinkUrl := uuid.New().String()
+		expectedResponse :=  "Forbidden: user not found" 
+		rows := sqlmock.NewRows([]string{"link_url", "folder_id", "folder_name", "salt", "otp_hash", "access", "expiration"})
+	
+		mock.ExpectQuery("SELECT link_url, folder_id, folder_name, salt, otp_hash, access, expiration FROM sharing_users WHERE link_url = \\$1").
+			WithArgs(wrongLinkUrl).
+			WillReturnRows(rows)
+
+		sharingCreds := SharingCredentials{
+			LinkUrl: wrongLinkUrl,
+			OtpPassword: otpPass,
+		}
+		body, err := json.Marshal(sharingCreds)
+		if err != nil {
+			t.Fatalf("failed to marshal credentials: %v", err)
+		}
+		rr := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", url, bytes.NewBuffer(body))
+
+		SharingGatewayHandler(rr, req, db)
+
+		if rr.Code != http.StatusForbidden {
+			t.Errorf("Expected status 403 Forbidden, got: %d", rr.Code)
+		}
+
+		if strings.TrimSpace(rr.Body.String()) != expectedResponse {
+			t.Errorf("Expected response %s, got: %s", expectedResponse, strings.TrimSpace(rr.Body.String()))
+		}
+	})
+
+	t.Run("Wrong_Otp_Pass", func(t *testing.T) {
+		expectedResponse :=  "Forbidden: invalid credentials"
+		wrongPass := "000000"
+		wrongHash := helpers.HashPassword(wrongPass, salt)
+		rows := sqlmock.NewRows([]string{"link_url", "folder_id", "folder_name", "salt", "otp_hash", "access", "expiration"}).
+					AddRow(linkUrl, sharingFolderId, folderName, salt, wrongHash, access, expiration)
+	
+		mock.ExpectQuery("SELECT link_url, folder_id, folder_name, salt, otp_hash, access, expiration FROM sharing_users WHERE link_url = \\$1").
+			WithArgs(linkUrl).
+			WillReturnRows(rows)
+
+		sharingCreds := SharingCredentials{
+			LinkUrl: linkUrl,
+			OtpPassword: otpPass,
+		}
+		body, err := json.Marshal(sharingCreds)
+		if err != nil {
+			t.Fatalf("failed to marshal credentials: %v", err)
+		}
+		rr := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", url, bytes.NewBuffer(body))
+
+		SharingGatewayHandler(rr, req, db)
+
+		if rr.Code != http.StatusForbidden {
+			t.Errorf("Expected status 403 Forbidden, got: %d", rr.Code)
+		}
+
+		if strings.TrimSpace(rr.Body.String()) != expectedResponse {
+			t.Errorf("Expected response %s, got: %s", expectedResponse, strings.TrimSpace(rr.Body.String()))
+		}
+	})
+
+	
+}
+
+func TestSharingGatewayHandlerSucces(t *testing.T) {
+
+	url := "/auth-share"
+
+	expirationDate := time.Now().Add(48 * time.Hour).UTC().Truncate(time.Second)
+	expiration := expirationDate.Format(time.RFC3339)
+	otpPass := "123456"
+	linkUrl := uuid.New().String()
+	expiryDuration := expirationDate.Sub(time.Now().UTC().Truncate(time.Second))
+	sharingFolderId := helpers.GenerateFolderName(expiryDuration, linkUrl)
+	folderName := "someFolderName"
+	access := "w"
+	salt, err := helpers.GenerateRandomSalt()
+	if err != nil {
+		t.Errorf("Received unexpected error when generating random salt: %v", err)
+	}
+	hashedOtp := helpers.HashPassword(otpPass, salt)
+
+	db, mock, err := initMockDb()
+	if err != nil {
+		t.Fatalf("Received unexpected error when initializing mock db: %v", err)
+	}
+	defer db.Close()
+
+	rows := sqlmock.NewRows([]string{"link_url", "folder_id", "folder_name", "salt", "otp_hash", "access", "expiration"}).
+			AddRow(linkUrl, sharingFolderId, folderName, salt, hashedOtp, access, expiration)
+
+	mock.ExpectQuery("SELECT link_url, folder_id, folder_name, salt, otp_hash, access, expiration FROM sharing_users WHERE link_url = \\$1").
+		WithArgs(linkUrl).
+		WillReturnRows(rows)
+
+	sharingCreds := SharingCredentials{
+		LinkUrl: linkUrl,
+		OtpPassword: otpPass,
+	}
+	body, err := json.Marshal(sharingCreds)
+	if err != nil {
+		t.Fatalf("failed to marshal credentials: %v", err)
+	}
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", url, bytes.NewBuffer(body))
+
+	SharingGatewayHandler(rr, req, db)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("Expected status 200 OK, got: %d", rr.Code)
+	}
+
+	// Check if access token, refresh token is set and valid.
+	respData := SharingTokenResponse{}
+	if err := json.Unmarshal(rr.Body.Bytes(), &respData); err != nil {
+		t.Fatalf("error unmarshalling response body: %v", err)
+	}
+	if respData.AccessToken == "" {
+		t.Error("access token not found in response body")
+	}
+	if respData.FolderId != sharingFolderId {
+		t.Errorf("Expected folderId : %s, got : %s", sharingFolderId, respData.FolderId)
+	}
+
+	if err := validateToken(respData.AccessToken, sharingFolderId, access); err != nil {
+		t.Errorf("Unexpected error when validating access token: %v", err)
+	}
+
+	var refreshCookie *http.Cookie
+	for _, cookie := range rr.Result().Cookies() {
+		if cookie.Name == "refresh_token" {
+			refreshCookie = cookie
+			break
+		}
+	}
+	if refreshCookie == nil {
+		t.Error("refresh token cookie not found")
+	} else {
+		if !refreshCookie.HttpOnly {
+			t.Errorf("expected HttpOnly to be true, got %v", refreshCookie.HttpOnly)
+		}
+		if err := validateToken(refreshCookie.Value, sharingFolderId, access); err != nil {
+			t.Errorf("Unexpected error when validating refresh token: %v", err)
+		}
+	}
 }
