@@ -7,14 +7,12 @@ import (
 	"strings"
 	"path/filepath"
 
-	"github.com/google/uuid"
 )
 
-func GenerateFolderName(expiryDuration time.Duration) string {
-	timestamp := time.Now().UTC().Format("20060102150405")
-	id := uuid.New()
+func GenerateFolderName(expiryDuration time.Duration, folderId string) string {
+	timestamp := time.Now().UTC().Truncate(time.Second).Format("20060102150405")
 
-	return fmt.Sprintf("%s_%s_%s", timestamp, expiryDuration, id)
+	return fmt.Sprintf("%s_%s_%s", timestamp, expiryDuration, folderId)
 }
 
 func CleanupExpiredFolders(root string) error {

@@ -1,14 +1,17 @@
 package auth
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
-	"database/sql"
 
 	"github.com/golang-jwt/jwt/v5"
 
 	"file-server/config"
+	"file-server/internal/helpers"
+	"file-server/internal/models"
+	"file-server/internal/repositories"
 )
 
 func GenerateTokens(accessParams, refreshParams *TokenParameters) (string, string, error) {
@@ -79,20 +82,31 @@ func DecodeToken(tokenStr string, secret string) (TokenParameters, error) {
 	return params, nil
 }
 
-
-func Authenticate(db *sql.DB, creds Credentials) (*User, error) {
-
-	user, err := getUserByUsername(db, creds.Username)
+func Authenticate(db *sql.DB, creds Credentials) (*models.User, error) {
+	user, err := repositories.GetUserByUsername(db, creds.Username)
 	if err != nil {
 		return nil, err
 	}
 
-	hashedPassword := HashPassword(creds.Password, user.Salt)
+	hashedPassword := helpers.HashPassword(creds.Password, user.Salt)
 	if hashedPassword != user.PasswordHash {
 		return nil, errors.New("invalid credentials")
 	}
 
 	return user, nil
+}
+
+func AuthenticateSharing(db *sql.DB, creds SharingCredentials) (*models.SharingUser, error) {
+	sharingUser, err := repositories.GetSharingUser(db, creds.LinkUrl)
+	if err != nil {
+		return nil, err
+	}
+	hashedPassword := helpers.HashPassword(creds.OtpPassword, sharingUser.Salt)
+	if hashedPassword != sharingUser.OtpHash {
+		return nil, errors.New("invalid credentials")
+	}
+
+	return sharingUser, nil
 }
 
 func HasAccess(claims jwt.MapClaims, folderID, requiredAccess string) (bool, error) {

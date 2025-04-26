@@ -4,3 +4,6 @@ env
 files/
 chunks/
 certs/*
+.vscode/
+.env
+secrets

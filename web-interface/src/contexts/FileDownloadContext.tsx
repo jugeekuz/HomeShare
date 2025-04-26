@@ -22,8 +22,6 @@ export const FileDownloadProvider : React.FC<{children : ReactNode}> = ({childre
             const response = await api.get(config.GET_DOWNLOAD_FILE_AVAILABLE_URL, {
                 params: params,
             });
-            console.log(params)
-            console.log(response)
 
             if (response.status !== 200) {
                 notifyError("Download Error", "Zip file is currently being processed, try again in a few moments")

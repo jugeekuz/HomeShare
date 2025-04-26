@@ -291,12 +291,10 @@ func UploadHandler(w http.ResponseWriter, r *http.Request, jm *job.JobManager, f
 							continue
 						}
 						files[index] = entry.Name()
-						log.Printf("aaaaaaaaa name : %s", files[index])
 					}
 
 					folderId := filepath.Base(folderPath)
 					zipFileName := fmt.Sprintf("%s.zip", folderId)
-					log.Printf("folder path : %s Folder id : %s zipfileName: %s", folderPath, folderId, zipFileName)
 					err = helpers.CreateZip(folderPath, zipFileName, files, jm)
 					if err != nil {
 						log.Printf("[FILE-SERVER] Received error while creating zip file : %v", err)

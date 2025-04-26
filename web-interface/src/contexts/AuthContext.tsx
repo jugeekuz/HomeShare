@@ -16,13 +16,15 @@ export interface AuthContextType {
     setToken:           (token: string | null) => void;
     logout :            () => void;
     isAuthenticated:    boolean;
+    isAdmin:            boolean;
     refreshLoading:     boolean;
 }
 
 interface TokenClaims {
-    user_id:    string;
-    folder_id:  string;
-    access:     "r" | "w" | "rw"
+    user_id:        string;
+    folder_id:      string;
+    folder_name?:   string;
+    access:         "r" | "w" | "rw";
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,6 +42,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [token, setToken] = useState<string | null>(null);
     const [claims, setClaims] = useState<TokenClaims | null>(null);
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
     const [refreshLoading, setRefreshLoading] = useState<boolean>(true);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
@@ -83,12 +86,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setToken(null);
     }
 
-    useLayoutEffect(() => {
+    useEffect(() => {
+        setRefreshLoading(true);
         refresh()
             .then((res) => {
                 setToken(res.access_token);
+                setIsAuthenticated(!!res.access_token);
+                const tokenClaims = extractClaims(res.access_token);
+                setClaims(tokenClaims);
+                if (tokenClaims === null) {
+                    return;
+                }
+                if (!tokenClaims || !tokenClaims?.folder_id || !tokenClaims?.access) return;
+                if (tokenClaims.folder_id === "/" && tokenClaims.access === "rw") {
+                    setIsAdmin(true);
+                }
             })
-            .catch(() => setToken(null))
+            .catch((error) => {
+                setToken(null)
+            })
             .finally(() => setRefreshLoading(false));
     }, []);
 
@@ -142,7 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return (
         <AuthContext.Provider
-            value={{ token, setToken, isAuthenticated, claims, logout, refreshLoading }}
+            value={{ token, setToken, isAuthenticated, isAdmin, claims, logout, refreshLoading }}
         >
             {children}
         </AuthContext.Provider>

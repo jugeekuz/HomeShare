@@ -66,28 +66,28 @@
 
 @font-face {
     font-family: 'LinikSans';
-    src: url('/assets/fonts/LinikSans-Regular.ttf') format('truetype');
+    src: url('assets/fonts/LinikSans-Regular.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'LinikSans';
-    src: url('/assets/fonts/LinikSans-Light.ttf') format('truetype');
+    src: url('assets/fonts/LinikSans-Light.ttf') format('truetype');
     font-weight: light;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'LinikSans';
-    src: url('/assets/fonts/LinikSans-Medium.ttf') format('truetype');
+    src: url('assets/fonts/LinikSans-Medium.ttf') format('truetype');
     font-weight: medium;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'LinikSans';
-    src: url('/assets/fonts/LinikSans-Bold.ttf') format('truetype');
+    src: url('assets/fonts/LinikSans-Bold.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
 }

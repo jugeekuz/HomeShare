@@ -11,7 +11,7 @@ const FileUploader : React.FC = () => {
     const [folderId, setFolderId] = useState<string | undefined>(undefined);
     
     useEffect(() => {
-        const folderId = searchParams.get("folder-id")
+        const folderId = searchParams.get("fid")
         if (!folderId) {
             setFolderId(undefined);
             return;

@@ -2,11 +2,6 @@ package auth
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/sha256"
-	"database/sql"
-	"encoding/hex"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -15,97 +10,9 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 )
-
-type User struct {
-	Username     string
-	Email        string
-	Salt         string
-	PasswordHash string
-	FolderId     string
-	Access       string // r, w or rw
-}
-
 type contextKey string
 
 const ClaimsContextKey contextKey = "claims"
-
-func HashPassword(password, salt string) string {
-	hash := sha256.Sum256([]byte(password + salt))
-	return hex.EncodeToString(hash[:])
-}
-
-func GenerateRandomSalt() (string, error) {
-	salt := make([]byte, 16)
-	_, err := rand.Read(salt)
-	if err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(salt), nil
-}
-
-func InitializeUserTable(db *sql.DB) error {
-	createTableQuery := `
-		CREATE TABLE IF NOT EXISTS users (
-			username TEXT PRIMARY KEY,
-			email TEXT NOT NULL,
-			salt TEXT NOT NULL,
-			password_hash TEXT NOT NULL,
-			folder TEXT NOT NULL,
-			access TEXT NOT NULL CHECK (access IN ('r', 'w', 'rw'))
-		)
-	`
-	_, err := db.Exec(createTableQuery)
-	if err != nil {
-		return fmt.Errorf("error creating users table: %w", err)
-	}
-	return nil
-}
-
-func CreateAdminUser(db *sql.DB, username string, email string, password string) (User, error) {
-	var user User
-
-	createUserQuery := `
-		INSERT INTO users (username, email, salt, password_hash, folder, access)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		ON CONFLICT (username) DO UPDATE 
-		SET email = EXCLUDED.email 
-		RETURNING username, email, salt, password_hash, folder, access;
-	`
-	salt, err := GenerateRandomSalt()
-	if err != nil {
-		return User{}, err
-	}
-	user.Username = username
-	user.Email = email
-	user.Salt = salt
-	user.PasswordHash = HashPassword(password, salt)
-	user.FolderId = "/"
-	user.Access = "rw"
-
-	_, err = db.Exec(createUserQuery, user.Username, user.Email, user.Salt, user.PasswordHash, user.FolderId, user.Access)
-	if err != nil {
-		return User{}, err
-	}
-	return user, nil
-}
-
-func getUserByUsername(db *sql.DB, username string) (*User, error) {
-	query := `
-		SELECT username, email, salt, password_hash, folder, access
-		FROM users
-		WHERE username = $1
-	`
-	row := db.QueryRow(query, username)
-	var user User
-	err := row.Scan(&user.Username, &user.Email, &user.Salt, &user.PasswordHash, &user.FolderId, &user.Access)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("user not found")
-		}
-		return nil, err
-	}
-	return &user, nil
-}
 
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -160,4 +67,39 @@ func RefreshAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), ClaimsContextKey, token.Claims)
 		next(w, r.WithContext(ctx))
 	})
+}
+
+func CookieHasAccess(r *http.Request, folderId string, access string) bool {
+	cfg := config.LoadConfig()
+	cookie, err := r.Cookie("refresh_token")
+	if err != nil {
+		return false
+	}
+
+	token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
+		return []byte(cfg.Secrets.Jwt.JwtSecret), nil
+	})
+
+	if err != nil || !token.Valid {
+		return false
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return false
+	}
+
+	_, ok1 := claims["user_id"].(string)
+	folderId, ok2 := claims["folder_id"].(string)
+	access, ok3 := claims["access"].(string)
+	if !ok1 || !ok2 || !ok3 {
+		return false
+	}
+
+	hasAccess, err := HasAccess(claims, folderId, access)
+	if !hasAccess || err != nil {
+		return false
+	}
+
+	return true
 }

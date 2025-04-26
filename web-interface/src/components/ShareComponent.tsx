@@ -1,44 +1,14 @@
 import{useEffect, useState} from 'react'
 
-import { Input, DatePicker, Snippet, Select, SelectItem, Button, Tooltip, DateValue, Spinner } from '@heroui/react'
+import { Input, DatePicker, Snippet, Select, SelectItem, Button, Tooltip, DateValue, Spinner, InputOtp } from '@heroui/react'
 import { LuLink } from "react-icons/lu";
 import { getLocalTimeZone, today } from "@internationalized/date";
 import { IoMdInformationCircle } from "react-icons/io";
-
+import { SharingDetails, SharingResponse } from '../types';
 import config from '../configs/config';
 import usePost from '../hooks/usePost';
 import { useNotificationContext } from '../contexts/NotificationContext';
 
-
-interface SharingDetails {
-    expiry_duration:    string;
-    access:             "rw" | "r" | "w"
-}
-
-interface SharingResponse {
-    folder_id:          string;
-    refresh_token:      string;
-}
-
-const dateValueToGoDuration = (expiryDate : DateValue) : string => {
-    const parsedDate = expiryDate instanceof Date ? expiryDate : expiryDate.toDate('UTC');
-    if (isNaN(parsedDate.getTime())) {
-        return "";
-    }
-    
-    const now = new Date();
-    const diffMs = parsedDate.getTime() - now.getTime();
-    
-    let totalSeconds = Math.floor(diffMs / 1000);
-    let hours = Math.floor(totalSeconds / 3600);
-    totalSeconds %= 3600;
-    let seconds = totalSeconds;
-
-    const hoursString = hours !== 0 ? `${hours}h` : "";
-    const secondsString = seconds !== 0 ? `${seconds}s` : "";
-    
-    return `${hoursString}${secondsString}`;
-  }
 
 const sharingTooltipGuide = "Once you create the folder, copy the link on the bottom to share w/ your friends."
 
@@ -50,23 +20,27 @@ const sharingOptions = [
 
 const ShareComponent = () => {
     const [folderName, setFolderName] = useState<string>("");
+    const [otpValue, setOtpValue] = useState<string>("");
     const [sharingOption, setSharingOption] = useState<"r" | "w" | "rw">("rw");
     const [linkUrl, setLinkUrl] = useState<string | null>(null);
-    const [refreshToken, setRefreshToken] = useState<string | null>(null);
-    const [folderId, setFolderId] = useState<string | null>(null);
+    const [_, setFolderId] = useState<string | null>(null);
     const [date, setDate] = useState<DateValue | null>(null);
     const {postItem, loading, success, error, data} = usePost(config.SHARE_URL);
     const {notifySuccess, notifyError} = useNotificationContext();
 
 
     const handleSumbit = () => {
-        if (!folderName || !sharingOption || !date) return;
+        if (!folderName || !sharingOption || !date || !otpValue) return;
 
-        const timeDurationGoString = dateValueToGoDuration(date) // create function
-        
+
+        const parsedDate = date instanceof Date ? date : date.toDate('UTC');
+        if (isNaN(parsedDate.getTime())) return;
+
         const itemToPost : SharingDetails = {
-            expiry_duration: timeDurationGoString,
-            access: sharingOption
+            access: sharingOption,
+            folder_name: folderName,
+            otp: otpValue,
+            expiration_date: parsedDate.toISOString(),
         };
         
         postItem(itemToPost)
@@ -87,26 +61,14 @@ const ShareComponent = () => {
     useEffect(() => {
         if (!data) return;
         const res = data as SharingResponse;
-        if (!res?.folder_id || !res?.refresh_token) return;
+        if (!res?.link_url || !res?.folder_id) return;
+        const baseUrl = window.location.origin;
+        const sharingUrl = new URL('/sg-', baseUrl);
 
-        setRefreshToken(res.refresh_token);
+        sharingUrl.searchParams.set('l', res.link_url);
+        setLinkUrl(sharingUrl.toString());
         setFolderId(res.folder_id);
     }, [data])
-
-    useEffect(() => {
-        if (!refreshToken || !folderId) return;
-        const baseUrl = window.location.origin;
-
-        const sharingUrl = new URL('/sharing-gateway', baseUrl);
-
-        sharingUrl.searchParams.set('refresh', refreshToken);
-        sharingUrl.searchParams.set('folder-id', folderId);
-        sharingUrl.searchParams.set('folder-name', folderName);
-
-        setLinkUrl(sharingUrl.toString());
-
-    }, [refreshToken, folderId, folderName])
-    
 
     return (
         <div className="flex flex-col w-full h-full justify-center items-center p-">
@@ -190,7 +152,7 @@ const ShareComponent = () => {
                     isRequired
                     className="w-[18rem]"
                     selectorButtonPlacement="start"
-                    label="When do you want the folder to expire?"
+                    label="When should the folder to expire?"
                     labelPlacement='outside'
                     value={date}
                     onChange={setDate}
@@ -203,7 +165,35 @@ const ShareComponent = () => {
                         input: 'font-brsonoma text-[12px]'
                     }}
                 />
+
+                <div className="w-[18rem]">
+
+                    <div className="flex items-center justify-start font-brsonoma text-[12px]">
+                        <span className="">
+                            What should be the folder's password?<span className="text-red-600">*</span>
+                        </span>
+                    </div>
+
+                    <div className="flex justify-center items-center">
+
+                        <InputOtp 
+                            radius="md"
+                            variant='faded'
+                            length={config.OTP_LENGTH}
+                            value={otpValue}
+                            onValueChange={setOtpValue}
+                            classNames={{
+                                segment: "bg-wsecondary text-gray-700 text-[12px] border border-gray-300",
+                                segmentWrapper: "gap-1 "
+                            }}
+                        />
+                    </div>
+
+                </div>
+
+
             </div>
+            
 
             {/* Link Creation & Copy Snippet */}
             <div className="flex flex-row justify-center items-center w-[21.8rem] mt-6 gap-5">

@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react(), svgr()],
   server: {
     port: 3001,
-    allowedHosts: ["kuza.gr"],
+    allowedHosts: ["api.homeshare.pro"],
     strictPort: true,
     host: true
   },
