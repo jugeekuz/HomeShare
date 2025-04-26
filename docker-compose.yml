@@ -14,17 +14,15 @@ services:
       - ./traefik/traefik.yml:/traefik.yml:ro
       - traefik:/certs
     env_file:
-      - env/cloudflare.env
+      - .env
     networks:
       - web
     
   postgres:
     image: postgres:15
     restart: always
-    environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: userdb
+    env_file:
+      - .env
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -40,8 +38,7 @@ services:
       - PING_INTERVAL=60
       - PING_URL=https://api.ipify.org?format=json
     env_file:
-      - env/cloudflare.env
-      - env/ddns-updater.env
+      - .env
     tty: true
     stdin_open: true
     networks:
@@ -54,6 +51,8 @@ services:
       dockerfile: ../dockerfiles/file-server.dockerfile
     tty: true
     stdin_open: true
+    env_file:
+      - .env
     depends_on:
       - postgres
       - traefik
@@ -66,7 +65,7 @@ services:
       - secrets:/app/secrets
     labels:
       - "traefik.enable=true"
-      - "traefik.tcp.routers.file-server.rule=HostSNI(`api.homeshare.pro`)"
+      - "traefik.tcp.routers.file-server.rule=HostSNI(`api.${DOMAIN}`)"
       - "traefik.tcp.routers.file-server.entrypoints=websecure"
       - "traefik.tcp.routers.file-server.tls.passthrough=true"
       
@@ -84,10 +83,12 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.web-interface.rule=Host(`homeshare.pro`)"
+      - "traefik.http.routers.web-interface.rule=Host(`${DOMAIN}`)"
       - "traefik.http.routers.web-interface.entrypoints=websecure"
       - "traefik.http.routers.web-interface.tls=true"
       - "traefik.http.routers.web-interface.tls.certresolver=letencrypt"
+      - "traefik.http.routers.web-interface.tls.domains[0].main=${DOMAIN}"
+      - "traefik.http.routers.web-interface.tls.domains[0].sans=*.${DOMAIN}"
     expose:
       - "80"
 
