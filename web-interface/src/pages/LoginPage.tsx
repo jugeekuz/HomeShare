@@ -39,7 +39,7 @@ const LoginPage = () => {
             ? <Navigate to="/"/> 
             :    <div className="flex w-full h-full justify-center items-center">
                     {/* Rectangle */}
-                    <Card className="max-w-full w-[400px] bg-wprimary -mt-10">
+                    <Card className="max-w-full w-[400px] bg-wprimary -mt-5">
                         <CardBody className="justify-center items-center pb-8">
                             <div className="flex flex-col w-full justify-center items-center">
                                 <div className="flex flex-col justify-center items-center w-64 my-3">
