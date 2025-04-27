@@ -6,7 +6,7 @@ ENV VITE_DOMAIN=${VITE_DOMAIN}
 WORKDIR /app
 
 COPY package.json /app
-COPY package-lock.json /app
+# COPY package-lock.json /app
 
 RUN npm install
 RUN npm rebuild esbuild
