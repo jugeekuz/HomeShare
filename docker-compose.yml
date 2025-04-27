@@ -20,7 +20,7 @@ services:
     
   postgres:
     image: postgres:15
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env
     volumes:
@@ -31,6 +31,7 @@ services:
       - "5432"
       
   ddns-updater:
+    restart: unless-stopped
     build: 
       context: ./ddns-updater
       dockerfile: ../dockerfiles/ddns-updater.dockerfile
@@ -46,6 +47,7 @@ services:
 
 
   file-server:
+    restart: unless-stopped
     build: 
       context: ./file-server
       dockerfile: ../dockerfiles/file-server.dockerfile
@@ -59,7 +61,7 @@ services:
     networks:
       - web
     volumes:
-      - ./files:/app/uploads
+      - ${FILES_UPLOAD_FOLDER}:/app/uploads
       - sharing:/app/temp
       - traefik:/app/certs
       - secrets:/app/secrets
@@ -73,6 +75,7 @@ services:
       - "443"
 
   web-interface:
+    restart: unless-stopped
     build:
       context: ./web-interface
       dockerfile: ../dockerfiles/web-interface.dockerfile
