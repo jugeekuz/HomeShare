@@ -19,7 +19,7 @@ certificatesResolvers:
   letencrypt:
     acme:
       caServer: https://acme-v02.api.letsencrypt.org/directory
-      email: tdiamantis97@gmail.com
+      email: changeme@changeme.org
       storage: /certs/acme.json
       dnsChallenge:
         provider: cloudflare
