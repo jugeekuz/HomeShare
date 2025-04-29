@@ -90,38 +90,47 @@ cd HomeShare
 ---
 
 #### 6. Create and Populate the .env File
-In the project root (next to `docker-compose.yml`), create a file named `.env` and add the following variables:
-```env
-# Cloudflare settings
-CLOUDFLARE_ZONE_ID=<YOUR_ZONE_ID>
-CLOUDFLARE_ACCOUNT_ID=<YOUR_ACCOUNT_ID>
-CF_DNS_API_TOKEN=<YOUR_API_TOKEN>
-CF_API_EMAIL=<YOUR_CLOUDFLARE_EMAIL>
-CLOUDFLARE_RECORD_NAME=<YOUR_ROOT_DOMAIN>   # e.g. example.com
+ - In the project root (next to `docker-compose.yml`), create a file named `.env` and add the following variables:
+   ```env
+   # Cloudflare settings
+   CLOUDFLARE_ZONE_ID=<YOUR_ZONE_ID>
+   CLOUDFLARE_ACCOUNT_ID=<YOUR_ACCOUNT_ID>
+   CF_DNS_API_TOKEN=<YOUR_API_TOKEN>
+   CF_API_EMAIL=<YOUR_CLOUDFLARE_EMAIL>
+   CLOUDFLARE_RECORD_NAME=<YOUR_ROOT_DOMAIN>   # e.g. example.com
 
-# Application domain and URLs
-DOMAIN=<YOUR_ROOT_DOMAIN>                   # e.g. example.com
-DOMAIN_ORIGIN=https://${DOMAIN}             # used for CORS and redirects
+   # Application domain and URLs
+   DOMAIN=<YOUR_ROOT_DOMAIN>                   # e.g. example.com
+   DOMAIN_ORIGIN=https://${DOMAIN}             # used for CORS and redirects
 
-# Database credentials (change to secure values)
-POSTGRES_USER=myuser
-POSTGRES_PASSWORD=mypassword
-POSTGRES_DB=userdb
+   # Database credentials (change to secure values)
+   POSTGRES_USER=myuser
+   POSTGRES_PASSWORD=mypassword
+   POSTGRES_DB=userdb
 
-# File storage folder - files will be uploaded here (absolute or relative path)
-# You can point this to any directory on your host system.
-FILES_UPLOAD_FOLDER="./files"       # e.g. /home/username/hs-files or ./files
+   # File storage folder - files will be uploaded here (absolute or relative path)
+   # You can point this to any directory on your host system.
+   FILES_UPLOAD_FOLDER="./files"       # e.g. /home/username/hs-files or ./files
 
-# User Credentials (change to secure values)
-# You will use those credentials to log in to the HomeShare UI
-ADMIN_USERNAME=user@email.com
-ADMIN_EMAIL=user@email.com
-ADMIN_PASSWORD=mypassword
-```
+   # User Credentials (change to secure values)
+   # You will use those credentials to log in to the HomeShare UI
+   ADMIN_USERNAME=user@email.com
+   ADMIN_EMAIL=user@email.com
+   ADMIN_PASSWORD=mypassword
+   ```
 
-> **Notes:**
-> - Replace placeholders (`<...>`) with your actual Cloudflare IDs, token, email, and domain.
-> - You may use an **absolute path** (e.g., `/home/user/hs-files`) or a **relative path** (e.g., `./files`) for `FILES_UPLOAD_FOLDER`.
+   > **Notes:**
+   > - Replace placeholders (`<...>`) with your actual Cloudflare IDs, token, email, and domain.
+   > - You may use an **absolute path** (e.g., `/home/user/hs-files`) or a **relative path** (e.g., `./files`) for `FILES_UPLOAD_FOLDER`.
+
+   - In `traefik/traefik.yml`, change the `changeme@changeme.org` address to your own address:
+      ```yml
+      certificatesResolvers:
+         letencrypt:
+            acme:
+               caServer: https://acme-v02.api.letsencrypt.org/directory
+               email: changeme@changeme.org   # change this value
+      ```
 ---
 
 #### 7. Build and Launch the Stack
